@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="WBrC Timer">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="Timer automático para receitas campeãs do World Brewers Cup 2015–2025, com despejos guiados, contagem regressiva e dose ajustável.">
+<meta name="description" content="Timer automático para receitas campeãs do World Brewers Cup 2015–2025 e extras (como o método de 10 despejos do Tetsu Kasuya), com despejos guiados, contagem regressiva e dose ajustável.">
 <meta name="theme-color" content="#0c0a08">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -317,6 +317,302 @@ letter-spacing:.3px;cursor:pointer}
 .flash{position:fixed;inset:0;background:var(--green);opacity:0;pointer-events:none;
 z-index:99;transition:opacity .05s}
 .flash.show{opacity:.15}
+
+/* ═══════════════════════════════════════════════════════════
+   v2 · REFINAMENTO DE INTERFACE
+   Camada aditiva: sobrescreve o necessário sem remover o legado
+   ═══════════════════════════════════════════════════════════ */
+:root{
+--ease:cubic-bezier(.22,.61,.36,1);
+--sh-sm:0 1px 3px rgba(0,0,0,.4);
+--sh-md:0 8px 28px rgba(0,0,0,.45);
+--sh-lg:0 18px 52px rgba(0,0,0,.6);
+--surface-2:#221c15;
+--glow-green:0 0 0 3px rgba(42,157,143,.18);
+}
+body{background:
+radial-gradient(1100px 520px at 50% -12%,#1b140d 0%,transparent 62%),
+radial-gradient(700px 380px at 100% 105%,#15100a 0%,transparent 60%),
+var(--bg)}
+
+/* entrada suave de conteúdo ao trocar de tela */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.screen.active .s1-list,.screen.active .var-list,
+.screen.active .s2-body,.screen.active .step-area{animation:fadeUp .28s var(--ease) both}
+
+/* ══ HEADER refinado ══ */
+.s1-top{padding:max(20px,env(safe-area-inset-top)) 20px 14px;
+background:linear-gradient(180deg,rgba(26,22,17,.85),rgba(12,10,8,0));
+border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.s1-brand{margin-bottom:14px;padding:6px 13px;box-shadow:0 2px 14px rgba(168,91,52,.35)}
+.s1-title{font-size:27px;letter-spacing:-.9px;margin-bottom:3px;
+background:linear-gradient(120deg,var(--text) 20%,var(--cream) 90%);
+-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.s1-sub{font-size:12.5px;color:var(--text-muted)}
+.head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.head-count{flex-shrink:0;text-align:right;font-family:'JetBrains Mono',monospace;
+font-size:11px;font-weight:700;color:var(--text-muted);line-height:1.4;padding-top:4px}
+.head-count b{display:block;font-size:20px;color:var(--green);font-weight:700}
+
+/* ══ BUSCA ══ */
+.search-wrap{position:relative;margin-top:14px}
+.search-ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);
+font-size:14px;opacity:.55;pointer-events:none}
+.search-input{width:100%;height:46px;padding:0 40px 0 38px;background:var(--surface);
+border:2px solid var(--border);border-radius:12px;color:var(--text);
+font-family:inherit;font-size:14px;font-weight:600;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
+.search-input::placeholder{color:var(--text-muted);font-weight:500}
+.search-input:focus{outline:none;border-color:var(--green);box-shadow:var(--glow-green)}
+.search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+width:30px;height:30px;border:none;background:transparent;color:var(--text-muted);
+font-size:19px;cursor:pointer;font-family:inherit;border-radius:8px;line-height:1}
+.search-clear:active{background:var(--border);color:var(--text)}
+.search-clear[hidden]{display:none}
+
+/* ══ CHIPS DE FILTRO ══ */
+.chips{display:flex;gap:7px;overflow-x:auto;margin-top:11px;padding-bottom:2px;
+scrollbar-width:none;-ms-overflow-style:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:20px;background:var(--surface);
+border:1.5px solid var(--border);color:var(--text-dim);font-family:inherit;
+font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
+transition:background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
+.chip:active{transform:scale(.95)}
+.chip.on{background:var(--green);border-color:var(--green);color:#04201d}
+.chip.chip-new{border-color:var(--terra);color:var(--terra)}
+.chip.chip-new.on{background:var(--terra);border-color:var(--terra);color:#fff}
+
+/* ══ LISTA ══ */
+.s1-list{padding:14px 20px calc(28px + env(safe-area-inset-bottom))}
+.year-group{margin-bottom:22px}
+.year-header{display:flex;align-items:baseline;justify-content:space-between;
+font-size:14px;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px;padding-bottom:7px}
+.year-header .yh-n{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;
+letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);opacity:.75}
+
+/* ══ CARD DE RECEITA ══ */
+.recipe-card{border-radius:14px;padding:13px 15px;margin-bottom:9px;
+background:linear-gradient(155deg,var(--surface-2) 0%,var(--surface) 62%);
+box-shadow:var(--sh-sm);
+transition:transform .16s var(--ease),border-color .16s var(--ease),box-shadow .16s var(--ease)}
+.recipe-card:active{transform:scale(.982);border-color:var(--green);
+background:linear-gradient(155deg,#241d15 0%,#171310 62%);box-shadow:var(--sh-md)}
+.rc-top{margin-bottom:0;gap:11px}
+.rc-place{font-size:23px}
+.rc-flag{font-size:22px;opacity:.9}
+.rc-name{font-size:15.5px;letter-spacing:-.35px}
+.rc-method{font-size:11px;color:var(--text-muted);margin-top:2px}
+.rc-ratio{font-size:10px;padding:3px 9px;background:var(--teal-deep);
+box-shadow:inset 0 0 0 1px rgba(42,157,143,.55)}
+/* linha de metadados */
+.rc-meta{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:9px;
+padding-left:34px;border-top:1px solid rgba(255,255,255,.05);flex-wrap:wrap}
+.rc-tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;
+color:var(--text-muted);background:rgba(255,255,255,.035);
+border-radius:6px;padding:3px 7px;white-space:nowrap}
+.rc-tag b{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text-dim)}
+.rc-variant-hint{padding-left:34px;margin-top:9px;padding-top:9px;
+border-top:1px solid rgba(255,255,255,.05);font-size:11px}
+
+/* ══ SEÇÃO EXTRAS ══ */
+.extras-group{margin-bottom:26px}
+.extras-header{display:flex;align-items:center;gap:9px;margin-bottom:11px;padding-bottom:8px;
+border-bottom:1px solid var(--border)}
+.extras-header .eh-ic{font-size:15px}
+.extras-header .eh-t{font-size:13px;font-weight:800;letter-spacing:.8px;
+text-transform:uppercase;color:var(--terra)}
+.extra-card{display:block;width:100%;text-align:left;font-family:inherit;color:inherit;
+position:relative;cursor:pointer;border-radius:16px;padding:16px;margin-bottom:9px;
+background:linear-gradient(150deg,#2a1d13 0%,#1c1610 55%,#14201e 100%);
+border:2px solid var(--terra);box-shadow:0 8px 30px rgba(168,91,52,.22);
+transition:transform .16s var(--ease),box-shadow .16s var(--ease)}
+.extra-card:active{transform:scale(.982);box-shadow:0 4px 18px rgba(168,91,52,.3)}
+.ex-badge{position:absolute;top:-9px;right:14px;background:var(--terra);color:#fff;
+font-size:9.5px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:20px;
+box-shadow:0 3px 12px rgba(168,91,52,.55)}
+.ex-top{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+.ex-flag{font-size:26px;flex-shrink:0}
+.ex-head{flex:1;min-width:0}
+.ex-title{display:block;font-size:17px;font-weight:900;color:var(--text);letter-spacing:-.4px;line-height:1.2}
+.ex-author{display:block;font-size:11.5px;font-weight:600;color:var(--cream);opacity:.8;margin-top:2px}
+.ex-tagline{display:block;font-size:12.5px;font-weight:500;color:var(--text-dim);
+line-height:1.5;margin-bottom:11px}
+.ex-meta{display:flex;gap:7px;flex-wrap:wrap}
+.ex-meta .rc-tag{background:rgba(0,0,0,.28);color:var(--text-dim)}
+.ex-meta .rc-tag b{color:var(--cream)}
+
+/* ══ ESTADO VAZIO ══ */
+.empty-state{text-align:center;padding:52px 24px;color:var(--text-muted)}
+.empty-state .es-ic{font-size:42px;opacity:.5;margin-bottom:12px}
+.empty-state .es-t{font-size:15px;font-weight:700;color:var(--text-dim);margin-bottom:5px}
+.empty-state .es-s{font-size:13px;line-height:1.5}
+
+/* ══ VARIANTES ══ */
+.var-card{border-radius:14px;padding:15px;
+background:linear-gradient(155deg,var(--surface-2) 0%,var(--surface) 62%);box-shadow:var(--sh-sm)}
+.var-card:active{transform:scale(.982);box-shadow:var(--sh-md)}
+
+/* ══ NAV ══ */
+.s2-nav{background:linear-gradient(180deg,rgba(26,22,17,.8),rgba(12,10,8,0));
+backdrop-filter:blur(10px);padding:max(18px,env(safe-area-inset-top)) 20px 16px}
+.back-btn{width:46px;height:46px;border-radius:13px;font-size:21px;
+transition:background .15s var(--ease),transform .15s var(--ease)}
+.back-btn:active{transform:scale(.94)}
+.s2-title{font-size:16px;letter-spacing:-.3px}
+
+/* ══ SETUP ══ */
+.dose-section{border-radius:18px;padding:22px 20px;
+background:linear-gradient(160deg,var(--surface-2),var(--surface));box-shadow:var(--sh-sm)}
+.dose-label{margin-bottom:16px}
+.dose-control{gap:14px}
+.dose-btn{width:60px;height:60px;flex-shrink:0;font-size:29px;border-width:2.5px;
+transition:background .14s var(--ease),color .14s var(--ease),transform .14s var(--ease)}
+.dose-btn:active{transform:scale(.9)}
+.dose-value{font-size:66px;min-width:112px}
+.dose-unit{font-size:14px;margin-top:6px}
+/* presets rápidos de dose */
+.dose-presets{display:flex;gap:7px;margin-top:18px;flex-wrap:nowrap;
+overflow-x:auto;justify-content:flex-start;padding:2px;
+scrollbar-width:none;-ms-overflow-style:none}
+.dose-presets::-webkit-scrollbar{display:none}
+.dose-preset{flex:1 0 auto;padding:7px 12px;border-radius:20px;background:var(--bg);
+border:1.5px solid var(--border);color:var(--text-dim);font-family:'JetBrains Mono',monospace;
+font-size:12px;font-weight:700;cursor:pointer;transition:all .15s var(--ease)}
+.dose-preset:active{transform:scale(.94)}
+.dose-preset.on{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+/* resumo água + tempo */
+.setup-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.stat-box{background:var(--bg);border:1.5px solid var(--border);border-radius:13px;
+padding:13px 10px;text-align:center}
+.stat-box.water{border-color:var(--blue);background:var(--blue-bg)}
+.stat-label{font-size:9.5px;font-weight:800;color:var(--text-muted);
+text-transform:uppercase;letter-spacing:1.1px;margin-bottom:5px}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:29px;font-weight:700;
+color:var(--text);line-height:1}
+.stat-box.water .stat-val{color:var(--blue)}
+.stat-unit{font-size:11px;font-weight:700;color:var(--text-muted);margin-left:2px}
+
+/* ══ NOTA DA RECEITA ══ */
+.recipe-note{background:var(--surface);border:2px solid var(--border);
+border-left:4px solid var(--terra);border-radius:13px;padding:14px 16px;margin-bottom:18px}
+.rn-label{display:block;font-size:9.5px;font-weight:800;color:var(--terra);
+text-transform:uppercase;letter-spacing:1.1px;margin-bottom:6px}
+.rn-text{display:block;font-size:13px;font-weight:500;color:var(--text-dim);line-height:1.55}
+
+/* ══ TIMELINE DE DESPEJOS ══ */
+.pours-section{border-radius:18px;padding:18px;
+background:linear-gradient(160deg,var(--surface-2),var(--surface));box-shadow:var(--sh-sm)}
+.pours-title{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.pours-title .pt-n{font-family:'JetBrains Mono',monospace;font-size:11px;
+color:var(--text-muted);text-transform:none;letter-spacing:0}
+.timeline{display:flex;gap:2px;height:34px;border-radius:9px;overflow:hidden;
+background:var(--bg);margin-bottom:6px;border:1px solid var(--border)}
+.tl-seg{position:relative;display:flex;align-items:center;justify-content:center;
+font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;color:#04201d;
+background:var(--green);min-width:3px;overflow:hidden;
+transition:opacity .2s var(--ease)}
+.tl-seg:nth-child(even){background:#3fb3a4}
+.tl-seg.tl-drain{background:var(--border);color:var(--text-muted)}
+.tl-axis{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
+font-size:9.5px;font-weight:700;color:var(--text-muted);margin-bottom:16px}
+
+/* ══ TABELA DE DESPEJOS ══ */
+.pour-row{grid-template-columns:48px 1fr 42px 64px;gap:9px;align-items:center;padding:11px 0}
+.pour-time{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
+color:var(--green);background:var(--green-bg);border-radius:6px;
+padding:3px 0;text-align:center}
+.pour-time.drain{color:var(--text-muted);background:rgba(255,255,255,.04)}
+.pour-name{font-size:13.5px;letter-spacing:-.2px}
+.pour-temp{font-size:12.5px}
+.pour-amt{font-size:14px}
+.pour-acc{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;
+font-weight:600;color:var(--text-muted);margin-top:2px}
+.pour-note{font-size:10.5px;margin-top:2px}
+
+/* ══ BOTÃO INICIAR ══ */
+.start-btn{height:66px;border-radius:17px;font-size:18px;
+background:linear-gradient(135deg,var(--green),#38b5a5);
+box-shadow:0 10px 34px rgba(42,157,143,.38);
+transition:transform .14s var(--ease),box-shadow .14s var(--ease)}
+
+/* ══ TELA DE PREPARO ══ */
+.s3-top{padding:16px 18px;gap:12px;
+background:linear-gradient(180deg,rgba(26,22,17,.7),rgba(12,10,8,0))}
+.timer-clock{font-size:30px;letter-spacing:1.5px;flex-shrink:0;font-variant-numeric:tabular-nums}
+/* dots → barra segmentada (escala para 11+ etapas) */
+.progress-dots{flex:1;gap:3px;min-width:0;margin:0 4px}
+.pdot{flex:1;width:auto;height:5px;min-width:3px;border-radius:3px;
+background:var(--border);transition:background .28s var(--ease),transform .28s var(--ease)}
+.pdot.active{width:auto;height:5px;background:var(--green);transform:scaleY(2.4);
+box-shadow:0 0 10px rgba(42,157,143,.6)}
+.pdot.done{background:var(--teal-deep)}
+.reset-btn{padding:8px 13px;font-size:11px;border-radius:9px;flex-shrink:0}
+
+.next-bar{padding:11px 18px}
+.next-label{font-size:9.5px}
+.next-action{font-size:13px}
+.next-countdown{font-size:21px;font-variant-numeric:tabular-nums}
+
+.step-area{padding:20px 18px}
+.step-pour,.step-wait,.step-drain,.step-serve{border-radius:22px;padding:26px 20px;
+box-shadow:var(--sh-lg);animation:stepIn .3s var(--ease) both}
+@keyframes stepIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.step-pour{background:linear-gradient(160deg,#123029 0%,var(--green-bg) 70%)}
+.step-type{font-size:13px;letter-spacing:2.2px;margin-bottom:10px}
+.step-name{font-size:26px;margin-bottom:22px}
+.step-sub{font-size:12.5px;font-weight:600;color:var(--text-muted);
+margin:-16px 0 20px;line-height:1.45}
+.value-box{border-radius:13px;padding:17px 12px;background:rgba(0,0,0,.32)}
+.value-main{font-size:44px;font-variant-numeric:tabular-nums}
+.step-progress{height:9px;border-radius:5px;margin-bottom:14px}
+.step-progress-fill{background:linear-gradient(90deg,var(--teal-deep),var(--green));
+transition:width .45s var(--ease)}
+.step-accum-big{padding:14px 18px;border-radius:13px;background:rgba(0,0,0,.34)}
+.accum-label{font-size:12px;letter-spacing:3.4px;margin-bottom:2px}
+.accum-val{font-size:62px;font-variant-numeric:tabular-nums}
+.accum-unit{font-size:24px}
+.accum-total{font-size:14px;margin-top:3px}
+/* caixa mantida em 180px: o SVG gerado pelo JS é 180×180 e .ring-time
+   se centraliza por inset:0 — encolher só o CSS descentralizava o número */
+.countdown-ring{margin-bottom:20px}
+.ring-time{font-size:50px;font-variant-numeric:tabular-nums}
+
+/* ══ FINISH ══ */
+.finish-btn{background:linear-gradient(135deg,var(--green),#38b5a5);
+box-shadow:0 10px 32px rgba(42,157,143,.35)}
+.finish-title{font-size:32px}
+
+/* ══ A11Y: telas inativas saem do tab order e da árvore de acessibilidade ══ */
+/* (antes ficavam com opacity:0 mas ainda focáveis por teclado/leitor de tela) */
+.screen{visibility:hidden;transition:opacity .2s var(--ease),visibility 0s linear .2s}
+.screen.active{visibility:visible;transition:opacity .2s var(--ease),visibility 0s}
+
+/* ══ TELAS ESTREITAS (≤380px) ══ */
+@media (max-width:380px){
+.dose-btn{width:54px;height:54px;font-size:26px}
+.dose-value{font-size:56px;min-width:92px}
+.dose-unit{font-size:13px}
+.s2-title{font-size:15px}
+.s1-title{font-size:24px}
+.stat-val{font-size:26px}
+.pour-row{grid-template-columns:44px 1fr 40px 60px;gap:7px}
+.pour-name{font-size:13px}
+}
+
+/* ══ TELAS LARGAS / TABLET ══ */
+@media (min-width:600px){
+/* Coluna de conteúdo de 620px em todas as telas.
+   Barras (header, nav, topo do preparo, next-bar) continuam ocupando a largura
+   inteira — fundo e borda inferior seguem sangrando — mas recebem padding
+   lateral calculado, que alinha o conteúdo interno mesmo em filhos inline-flex
+   (o selo do Instagram e o botão Instalar, que ignoram margin:auto). */
+.s1-top,.s2-nav,.s3-top,.next-bar{
+padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px))}
+.s1-list,.var-list,.s2-body{max-width:660px;width:100%;margin-left:auto;margin-right:auto}
+.start-btn{left:50%;right:auto;transform:translateX(-50%);width:min(620px,calc(100% - 40px))}
+.start-btn:active{transform:translateX(-50%) translateY(2px)}
+.step-pour,.step-wait,.step-drain,.step-serve{max-width:560px;margin:0 auto}
+}
 </style>
 </head>
 <body>
@@ -371,11 +667,24 @@ z-index:99;transition:opacity .05s}
 <span class="s1-brand-icon" aria-hidden="true">📷</span>
 <span class="s1-brand-text">@original.coffee.roaster</span>
 </a>
+<div class="head-row">
+<div>
 <h1 class="s1-title">WBrC Timer</h1>
-<p class="s1-sub">Timer automático · Top 3 Campeões 2015–2025</p>
+<p class="s1-sub">Timer guiado · Campeões 2015–2025 + Extras</p>
+</div>
+<div class="head-count" aria-hidden="true"><b id="head-count-n">0</b>receitas</div>
+</div>
 <button class="install-btn" id="install-btn" type="button" hidden onclick="onInstallClick()" aria-label="Instalar o app na tela inicial">
 <span class="ib-ic" aria-hidden="true">⤓</span> Instalar app
 </button>
+<div class="search-wrap">
+<span class="search-ic" aria-hidden="true">🔎</span>
+<label for="search-input" class="sr-only">Buscar receita por campeão, país ou dripper</label>
+<input id="search-input" class="search-input" type="search" inputmode="search" autocomplete="off"
+placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)">
+<button class="search-clear" id="search-clear" type="button" hidden onclick="clearSearch()" aria-label="Limpar busca">×</button>
+</div>
+<div class="chips" id="filter-chips" role="group" aria-label="Filtrar por método"></div>
 </header>
 <div class="s1-list" id="recipe-list" aria-label="Receitas por ano"></div>
 </main>
@@ -399,6 +708,10 @@ z-index:99;transition:opacity .05s}
 </nav>
 <div class="s2-body">
 <div class="setup-memory" id="setup-memory" aria-live="polite"></div>
+<div class="recipe-note" id="recipe-note" hidden>
+<span class="rn-label">Sobre a receita</span>
+<span class="rn-text" id="recipe-note-text"></span>
+</div>
 <div class="dose-section">
 <div class="dose-label" id="dose-label">Dose de Café</div>
 <div class="dose-control">
@@ -409,14 +722,22 @@ z-index:99;transition:opacity .05s}
 </div>
 <button class="dose-btn" onclick="changeDose(1)" aria-label="Aumentar dose em 1 grama">+</button>
 </div>
-<div class="water-sum">
-<span class="water-label">Total</span>
-<span class="water-value" id="water-val" aria-live="polite">270</span>
-<span class="water-unit">ml</span>
+<div class="dose-presets" id="dose-presets" role="group" aria-label="Doses rápidas"></div>
+<div class="setup-stats">
+<div class="stat-box water">
+<div class="stat-label">Água total</div>
+<div><span class="stat-val" id="water-val" aria-live="polite">270</span><span class="stat-unit">ml</span></div>
+</div>
+<div class="stat-box">
+<div class="stat-label">Tempo total</div>
+<div><span class="stat-val" id="time-val">00:00</span></div>
+</div>
 </div>
 </div>
 <div class="pours-section">
-<h3 class="pours-title">Despejos</h3>
+<h3 class="pours-title"><span>Despejos</span><span class="pt-n" id="pours-count"></span></h3>
+<div class="timeline" id="pour-timeline" aria-hidden="true"></div>
+<div class="tl-axis" id="pour-axis" aria-hidden="true"></div>
 <div id="pours-table"></div>
 </div>
 </div>
@@ -742,6 +1063,28 @@ ratio:15,steps:[
 {atSec:210,type:'serve',label:'Servir'}]},
 ];
 
+/* ═══ EXTRAS — receitas fora do circuito WBrC (novidades) ═══ */
+const EXTRAS=[
+{id:'kasuya10',key:'kasuya10',badge:'NOVO',flag:'🇯🇵',champion:'Tetsu Kasuya',country:'Japão',
+year:2026,isExtra:true,defaultDose:20,title:'Método 10 Despejos',
+dripper:'V60 / V60 Neo · 10 despejos',dripperShort:'V60 / Neo',ratio:15,
+tagline:'A receita nova do Kasuya — dez despejos iguais, moagem super grossa.',
+desc:'Dez despejos de 30 ml: bloom de 30 s e depois cadência fixa de 15 s. Moagem super grossa (40–45 clicks no C40) com água a 96 °C — o grão grosso compensa a agitação constante, entregando doçura e textura sedosa sem amargor.',
+steps:[
+{atSec:0,type:'pour',label:'Bloom',frac:30/300,temp:96,note:'1/10 · bloom de 30s'},
+{atSec:30,type:'pour',label:'2º Despejo',frac:30/300,temp:96,note:'2/10 · cadência 15s'},
+{atSec:45,type:'pour',label:'3º Despejo',frac:30/300,temp:96,note:'3/10 · cadência 15s'},
+{atSec:60,type:'pour',label:'4º Despejo',frac:30/300,temp:96,note:'4/10 · cadência 15s'},
+{atSec:75,type:'pour',label:'5º Despejo',frac:30/300,temp:96,note:'5/10 · cadência 15s'},
+{atSec:90,type:'pour',label:'6º Despejo',frac:30/300,temp:96,note:'6/10 · cadência 15s'},
+{atSec:105,type:'pour',label:'7º Despejo',frac:30/300,temp:96,note:'7/10 · cadência 15s'},
+{atSec:120,type:'pour',label:'8º Despejo',frac:30/300,temp:96,note:'8/10 · cadência 15s'},
+{atSec:135,type:'pour',label:'9º Despejo',frac:30/300,temp:96,note:'9/10 · cadência 15s'},
+{atSec:150,type:'pour',label:'10º Despejo',frac:30/300,temp:96,note:'10/10 · cadência 15s'},
+{atSec:165,type:'drain',label:'Drenagem final',dur:45},
+{atSec:210,type:'serve',label:'Servir'}]},
+];
+
 /* ═══════════════════════════════════════════
    STATE & HELPERS
    ═══════════════════════════════════════════ */
@@ -762,6 +1105,7 @@ return Math.abs(r-round)<0.15?`1:${round}`:`1:${r.toFixed(1)}`;
 }
 const fmtMs=ms=>{const s=Math.floor(ms/1000),m=Math.floor(s/60);return`${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`};
 const fmtS=s=>{s=Math.max(0,s);return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`};
+const fmtShort=s=>{s=Math.max(0,Math.round(s));return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
 /* R2: pré-computa o volume acumulado em cada índice ao carregar a receita (O(n) uma vez, não por render) */
 function buildAccumCache(){
 accumCache=[];let sum=0;
@@ -792,7 +1136,7 @@ return p.length?p.join(' · '):'✓ Equilibrado. Da próxima, repita igual.';
 /* Restaura a dose memorizada desta receita (fallback: última dose da sessão) */
 function restoreDose(){
 const rec=loadStore().recipes&&loadStore().recipes[recipeKey()];
-dose=(rec&&rec.dose)?rec.dose:lastDose;
+dose=(rec&&rec.dose)?rec.dose:((R&&R.defaultDose)||lastDose);
 lastDose=dose;
 }
 
@@ -899,15 +1243,85 @@ function goHome(){stopBrew();const f=document.getElementById('finish');f.classLi
 /* ═══════════════════════════════════════════
    BUILD RECIPE LIST
    ═══════════════════════════════════════════ */
+/* ═══ BUSCA + FILTROS ═══ */
+let filterMode='all',searchQ='';
+const FILTERS=[{k:'all',label:'Todas'},{k:'new',label:'✨ Extras'},
+{k:'v60',label:'V60'},{k:'origami',label:'Origami'},{k:'orea',label:'OREA'},{k:'other',label:'Outros'}];
+
+function dripperFamily(d){d=(d||'').toLowerCase();
+if(d.indexOf('v60')>=0)return'v60';
+if(d.indexOf('origami')>=0)return'origami';
+if(d.indexOf('orea')>=0)return'orea';
+return'other';}
+
+function matchesSearch(r){
+if(!searchQ)return true;
+return [r.champion,r.country,r.dripper,r.title,r.year].filter(Boolean).join(' ').toLowerCase().indexOf(searchQ)>=0;}
+
+function matchesFilter(r,isExtra){
+if(filterMode==='all')return true;
+if(filterMode==='new')return !!isExtra;
+return dripperFamily(r.dripper)===filterMode;}
+
+/* metadados derivados dos próprios passos — nada é inventado */
+function recipeMeta(r){
+const steps=r.steps||(r.isVariantGroup?KASUYA[0].steps:null);
+if(!steps||!steps.length)return null;
+const pours=steps.filter(s=>s.type==='pour').length;
+const total=steps[steps.length-1].atSec;
+const temps=steps.filter(s=>s.temp).map(s=>s.temp);
+const tmin=Math.min.apply(null,temps),tmax=Math.max.apply(null,temps);
+return{pours:pours,total:total,temp:tmin===tmax?tmin+'°C':tmin+'–'+tmax+'°C'};}
+
+function metaTags(m){
+if(!m)return'';
+return `<span class="rc-tag">💧 <b>${m.pours}</b> despejos</span>`+
+`<span class="rc-tag">⏱ <b>${fmtShort(m.total)}</b></span>`+
+`<span class="rc-tag">🌡 <b>${m.temp}</b></span>`;}
+function metaSpoken(m){
+return m?`${m.pours} despejos, ${Math.round(m.total/60)} minutos, ${m.temp}.`:'';}
+
+/* ═══════════════════════════════════════════
+   BUILD RECIPE LIST (extras + anos, com busca/filtro)
+   ═══════════════════════════════════════════ */
 function buildList(){
-const byYear={};
-RECIPES.forEach(r=>{if(!byYear[r.year])byYear[r.year]=[];byYear[r.year].push(r);});
-const years=Object.keys(byYear).sort((a,b)=>b-a);
+const extras=EXTRAS.filter(e=>matchesFilter(e,true)&&matchesSearch(e));
+const recipes=RECIPES.filter(r=>matchesFilter(r,false)&&matchesSearch(r));
 const placeName={1:'1º lugar',2:'2º lugar',3:'3º lugar'};
-document.getElementById('recipe-list').innerHTML=years.map(year=>`
+let html='';
+
+if(extras.length){
+html+=`<section class="extras-group" aria-labelledby="extras-h">
+<div class="extras-header"><span class="eh-ic" aria-hidden="true">✨</span>
+<h2 class="eh-t" id="extras-h">Extras · Novidades</h2></div>
+${extras.map(e=>{
+const idx=EXTRAS.indexOf(e),m=recipeMeta(e);
+return `<button type="button" class="extra-card" onclick="pickExtra(${idx})"
+aria-label="${e.badge}: ${e.title}, de ${e.champion}, ${e.country}. ${e.dripper}. ${metaSpoken(m)}">
+<span class="ex-badge">${e.badge}</span>
+<span class="ex-top">
+<span class="ex-flag" aria-hidden="true">${e.flag}</span>
+<span class="ex-head">
+<span class="ex-title">${e.title}</span>
+<span class="ex-author">${e.champion} · ${e.country}</span>
+</span>
+<span class="rc-ratio" aria-hidden="true">${ratioLabel(e.ratio)}</span>
+</span>
+<span class="ex-tagline">${e.tagline}</span>
+<span class="ex-meta"><span class="rc-tag">☕ <b>${e.dripperShort||e.dripper}</b></span>${metaTags(m)}</span>
+</button>`;}).join('')}
+</section>`;
+}
+
+const byYear={};
+recipes.forEach(r=>{if(!byYear[r.year])byYear[r.year]=[];byYear[r.year].push(r);});
+const years=Object.keys(byYear).sort((a,b)=>b-a);
+html+=years.map(year=>`
 <section class="year-group" aria-labelledby="yr-${year}">
-<h2 class="year-header" id="yr-${year}">${year}</h2>
+<h2 class="year-header" id="yr-${year}"><span>${year}</span>
+<span class="yh-n">${byYear[year].length} receita${byYear[year].length>1?'s':''}</span></h2>
 ${byYear[year].map(r=>{
+const m=recipeMeta(r);
 if(r.isVariantGroup){
 return `<button type="button" class="recipe-card place-${r.place}" onclick="openVariants()"
 aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}, ${r.dripper}. Cinco variações de perfil.">
@@ -915,7 +1329,7 @@ aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}, ${r.dri
 <span class="rc-place" aria-hidden="true">${medals[r.place]}</span>
 <span class="rc-info">
 <span class="rc-name">${r.champion}</span>
-<span class="rc-method">${r.dripper}</span>
+<span class="rc-method">${r.dripper} · ${r.country}</span>
 </span>
 <span class="rc-flag" aria-hidden="true">${r.flag}</span>
 </span>
@@ -923,19 +1337,56 @@ aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}, ${r.dri
 </button>`;
 }
 return `<button type="button" class="recipe-card place-${r.place}" onclick="pickRecipe('${r.id}')"
-aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}. ${r.dripper}, proporção ${ratioLabel(r.ratio).replace(':',' para ')}.">
+aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}. ${r.dripper}, proporção ${ratioLabel(r.ratio).replace(':',' para ')}. ${metaSpoken(m)}">
 <span class="rc-top">
 <span class="rc-place" aria-hidden="true">${medals[r.place]}</span>
 <span class="rc-info">
 <span class="rc-name">${r.champion}</span>
-<span class="rc-method">${r.dripper}</span>
+<span class="rc-method">${r.dripper} · ${r.country}</span>
 </span>
 <span class="rc-ratio" aria-hidden="true">${ratioLabel(r.ratio)}</span>
 <span class="rc-flag" aria-hidden="true">${r.flag}</span>
 </span>
+<span class="rc-meta" aria-hidden="true">${metaTags(m)}</span>
 </button>`;
 }).join('')}
 </section>`).join('');
+
+if(!extras.length&&!recipes.length){
+html=`<div class="empty-state" role="status">
+<div class="es-ic" aria-hidden="true">☕</div>
+<div class="es-t">Nenhuma receita encontrada</div>
+<div class="es-s">Tente outro termo ou volte para o filtro <strong>Todas</strong>.</div></div>`;
+}
+document.getElementById('recipe-list').innerHTML=html;
+const n=extras.length+recipes.length;
+const hc=document.getElementById('head-count-n');if(hc)hc.textContent=n;
+}
+
+function buildChips(){
+document.getElementById('filter-chips').innerHTML=FILTERS.map(f=>
+`<button type="button" class="chip${f.k==='new'?' chip-new':''}${filterMode===f.k?' on':''}"
+aria-pressed="${filterMode===f.k}" onclick="setFilter('${f.k}')">${f.label}</button>`).join('');
+}
+function setFilter(k){filterMode=k;buildChips();buildList();vib(15);}
+function onSearch(v){
+searchQ=(v||'').trim().toLowerCase();
+document.getElementById('search-clear').hidden=!v;
+buildList();
+}
+function clearSearch(){
+const i=document.getElementById('search-input');
+i.value='';onSearch('');i.focus();
+}
+
+/* ═══ EXTRA (receitas fora do WBrC) ═══ */
+function pickExtra(i){
+ensureAudio();wakeLockOn();
+R=JSON.parse(JSON.stringify(EXTRAS[i]));
+cameFromVariants=false;restoreDose();
+buildAccumCache();
+document.getElementById('s2-title').textContent=`✨ ${R.title}`;
+renderSetup();show('s-setup');
 }
 
 /* ═══ KASUYA VARIANTS SCREEN ═══ */
@@ -977,16 +1428,76 @@ renderSetup();show('s-setup');
 }
 
 /* ═══ SETUP ═══ */
+const STEP_ICON={wait:'⏱',drain:'⬇',serve:'✓'};
+
+/* Linha do tempo proporcional ao tempo: comunica a cadência da receita
+   (4:6 despeja a cada 45 s; a de 10 despejos, a cada 15 s) */
+function renderTimeline(){
+const el=document.getElementById('pour-timeline'),ax=document.getElementById('pour-axis');
+if(!el||!ax)return;
+const steps=R.steps,total=steps[steps.length-1].atSec||1;
+let html='';
+for(let i=0;i<steps.length-1;i++){
+const st=steps[i],w=(steps[i+1].atSec-st.atSec)/total*100;
+const isPour=st.type==='pour';
+html+=`<div class="tl-seg${isPour?'':' tl-drain'}" style="width:${w.toFixed(2)}%">${(isPour&&w>6.5)?rnd(pourMl(st)):''}</div>`;
+}
+el.innerHTML=html;
+ax.innerHTML=`<span>0:00</span><span>${fmtShort(total/2)}</span><span>${fmtShort(total)}</span>`;
+}
+
+function renderDosePresets(){
+const el=document.getElementById('dose-presets');if(!el)return;
+const base=R.defaultDose||18;
+const opts=[12,15,18,20,22,25];
+if(opts.indexOf(base)<0)opts.push(base);
+opts.sort((a,b)=>a-b);
+el.innerHTML=opts.map(g=>`<button type="button" class="dose-preset${g===dose?' on':''}"
+aria-pressed="${g===dose}" aria-label="Usar ${g} gramas" onclick="setDose(${g})">${g}g</button>`).join('');
+}
+function setDose(g){
+dose=Math.max(1,Math.min(80,g));lastDose=dose;
+buildAccumCache();renderSetup();vib(15);
+}
+
 function renderSetup(){
 const tw=totalW();
 document.getElementById('dose-val').textContent=dose;
 document.getElementById('water-val').textContent=rnd(tw);
-document.getElementById('pours-table').innerHTML=R.steps.filter(s=>s.type==='pour').map(s=>`
-<div class="pour-row">
+const last=R.steps[R.steps.length-1];
+document.getElementById('time-val').textContent=fmtShort(last.atSec);
+const pours=R.steps.filter(s=>s.type==='pour');
+document.getElementById('pours-count').textContent=`${pours.length} despejo${pours.length>1?'s':''} · ${ratioLabel(R.ratio)}`;
+
+/* nota descritiva (só aparece quando a receita traz uma) */
+const note=document.getElementById('recipe-note');
+if(note){
+if(R.desc){document.getElementById('recipe-note-text').textContent=R.desc;note.hidden=false;}
+else note.hidden=true;
+}
+
+renderDosePresets();
+renderTimeline();
+
+/* tabela: despejos + esperas/drenagens, com acumulado por linha */
+let acc=0;
+document.getElementById('pours-table').innerHTML=R.steps.filter(s=>s.type!=='serve').map(s=>{
+if(s.type==='pour'){
+const ml=pourMl(s);acc+=ml;
+return `<div class="pour-row">
+<div class="pour-time">${fmtShort(s.atSec)}</div>
 <div class="pour-name">${s.label}${s.note?`<span class="pour-note">${s.note}</span>`:''}</div>
 <div class="pour-temp">${s.temp}°C</div>
-<div class="pour-amt">${rnd(pourMl(s))}ml</div>
-</div>`).join('');
+<div class="pour-amt">+${rnd(ml)}ml<span class="pour-acc">${rnd(acc)} total</span></div>
+</div>`;
+}
+return `<div class="pour-row">
+<div class="pour-time drain">${fmtShort(s.atSec)}</div>
+<div class="pour-name" style="color:var(--text-dim);font-weight:600">${STEP_ICON[s.type]||'·'} ${s.label}</div>
+<div class="pour-temp" style="color:var(--text-muted)">—</div>
+<div class="pour-amt" style="color:var(--text-muted);font-size:12px">${s.dur?s.dur+'s':'—'}</div>
+</div>`;
+}).join('');
 renderSetupMemory();
 }
 function changeDose(d){
@@ -1107,6 +1618,7 @@ const pct=Math.min(100,acc/tw*100);
 area.innerHTML=`<div class="step-pour">
 <div class="step-type">☕ DESPEJE AGORA</div>
 <div class="step-name">${s.label}</div>
+${s.note?`<div class="step-sub">${s.note}</div>`:''}
 <div class="step-values">
 <div class="value-box">
 <div class="value-label">Adicionar</div>
@@ -1227,7 +1739,9 @@ function showFinish(){
 if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
 clearInterval(ticker);ticker=null;wakeLockOff();
 document.getElementById('finish-time').textContent=fmtMs(Date.now()-t0);
-document.getElementById('finish-sub').innerHTML=`${medals[R.place]||''} ${R.champion} · ${R.year}<br>${R.dripper}`;
+document.getElementById('finish-sub').innerHTML=R.isExtra
+?`✨ ${R.title} · ${R.champion}<br>${R.dripper}`
+:`${medals[R.place]||''} ${R.champion} · ${R.year}<br>${R.dripper}`;
 saveBrew();             // item 2+3: auto-log + memoriza a dose desta receita
 buildFinishRating();    // item 4: matriz de avaliação fresca a cada extração
 const f=document.getElementById('finish');
@@ -1256,6 +1770,7 @@ show('s-setup');
 }
 
 /* ═══ INIT ═══ */
+buildChips();
 buildList();
 
 /* ═══════════════════════════════════════════

@@ -1,7 +1,7 @@
 {
   "name": "WBrC Brew Timer — Original Coffee Roaster",
   "short_name": "WBrC Timer",
-  "description": "Timer guiado das receitas campeãs do World Brewers Cup 2015–2025, com despejos, temperatura e avaliação.",
+  "description": "Timer guiado das receitas campeãs do World Brewers Cup 2015–2025 e de receitas extras, com despejos, temperatura e avaliação.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./brew.html",
