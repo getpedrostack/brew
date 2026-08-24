@@ -328,6 +328,7 @@ z-index:99;transition:opacity .05s}
 --sh-md:0 8px 28px rgba(0,0,0,.45);
 --sh-lg:0 18px 52px rgba(0,0,0,.6);
 --surface-2:#221c15;
+--ice:#5aa9c9;--ice-bg:#0e1e26;
 --glow-green:0 0 0 3px rgba(42,157,143,.18);
 }
 body{background:
@@ -440,6 +441,34 @@ line-height:1.5;margin-bottom:11px}
 .ex-meta{display:flex;gap:7px;flex-wrap:wrap}
 .ex-meta .rc-tag{background:rgba(0,0,0,.28);color:var(--text-dim)}
 .ex-meta .rc-tag b{color:var(--cream)}
+
+/* variantes de badge e de borda por tipo de extra */
+.ex-badge.badge-classic{background:var(--cream);color:#2a1d13;box-shadow:0 3px 12px rgba(240,220,192,.4)}
+.ex-badge.badge-cold{background:var(--ice);color:#04212c;box-shadow:0 3px 12px rgba(90,169,201,.5)}
+.extra-card.kind-classic{border-color:var(--cream);
+background:linear-gradient(150deg,#2b241a 0%,#1c1610 55%,#181d1c 100%);
+box-shadow:0 8px 30px rgba(240,220,192,.14)}
+.extra-card.kind-cold{border-color:var(--ice);
+background:linear-gradient(150deg,#122a33 0%,#141b1e 55%,#101815 100%);
+box-shadow:0 8px 30px rgba(90,169,201,.2)}
+.extra-card.kind-classic .ex-author{color:var(--cream)}
+.extra-card.kind-cold .ex-author{color:var(--ice)}
+.extra-card.kind-cold .ex-meta .rc-tag b{color:var(--ice)}
+
+/* ══ LINHA DO GELO (Flash Brew) ══ */
+.ice-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:18px;
+padding:12px 14px;border-radius:13px;background:var(--ice-bg);border:2px solid var(--ice)}
+.ice-row[hidden]{display:none}
+.ice-ic{font-size:20px;flex-shrink:0}
+.ice-main{font-size:13.5px;font-weight:700;color:var(--text)}
+.ice-main b{font-family:'JetBrains Mono',monospace;font-size:19px;color:var(--ice);margin:0 2px}
+.ice-note{flex-basis:100%;font-size:11px;font-weight:600;color:var(--text-muted);padding-left:29px}
+.stat-sub{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;
+color:var(--text-muted);margin-top:5px}
+.stat-sub[hidden]{display:none}
+/* linha de preparo na tabela de despejos */
+.pour-row.prep-row .pour-time{color:var(--ice);background:var(--ice-bg)}
+.pour-row.prep-row .pour-amt{color:var(--ice)}
 
 /* ══ ESTADO VAZIO ══ */
 .empty-state{text-align:center;padding:52px 24px;color:var(--text-muted)}
@@ -723,10 +752,16 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 <button class="dose-btn" onclick="changeDose(1)" aria-label="Aumentar dose em 1 grama">+</button>
 </div>
 <div class="dose-presets" id="dose-presets" role="group" aria-label="Doses rápidas"></div>
+<div class="ice-row" id="ice-row" hidden>
+<span class="ice-ic" aria-hidden="true">🧊</span>
+<span class="ice-main">Gelo na jarra <b id="ice-val">100</b> g</span>
+<span class="ice-note">pese antes de começar · o café cai sobre ele</span>
+</div>
 <div class="setup-stats">
 <div class="stat-box water">
-<div class="stat-label">Água total</div>
+<div class="stat-label" id="water-label">Água total</div>
 <div><span class="stat-val" id="water-val" aria-live="polite">270</span><span class="stat-unit">ml</span></div>
+<div class="stat-sub" id="water-sub" hidden></div>
 </div>
 <div class="stat-box">
 <div class="stat-label">Tempo total</div>
@@ -1083,6 +1118,39 @@ steps:[
 {atSec:150,type:'pour',label:'10º Despejo',frac:30/300,temp:96,note:'10/10 · cadência 15s'},
 {atSec:165,type:'drain',label:'Drenagem final',dur:45},
 {atSec:210,type:'serve',label:'Servir'}]},
+
+/* Hoffmann · Ultimate V60 — 30g/500g, 1:16,7, 95°C.
+   Bloom 2× a dose → 60% da água até 1:15 → 100% até 1:45 → mexer + swirl → drenar.
+   Fontes: gota.cafe (V60-03) e transcrição do vídeo "Ultimate V60 Technique". */
+{id:'hoffmannv60',key:'hoffmannv60',badge:'CLÁSSICO',badgeKind:'classic',
+flag:'🇬🇧',champion:'James Hoffmann',country:'Reino Unido',
+year:2020,isExtra:true,defaultDose:30,title:'Ultimate V60',
+dripper:'Hario V60-03',dripperShort:'V60-03',ratio:500/30,
+tagline:'A receita de V60 mais preparada do mundo — bloom generoso e dois despejos.',
+desc:'Bloom com o dobro da dose e swirl suave para eliminar bolsões secos, depois dois despejos em espiral: 60% da água até 1:15 e o restante até 1:45. Fecha com uma mexida (1× horário, 1× anti-horário) para soltar o café das paredes e um swirl leve que nivela o leito. A drenagem deve terminar por volta de 3:30 — até 4:00 é normal em torras claras.',
+steps:[
+{atSec:0,type:'pour',label:'Bloom',frac:60/500,temp:95,note:'2× a dose · swirl suave logo após'},
+{atSec:45,type:'pour',label:'2º Despejo',frac:240/500,temp:95,note:'espiral · até 60% da água em ~30s'},
+{atSec:75,type:'pour',label:'3º Despejo',frac:200/500,temp:95,note:'espiral · completa a água em ~30s'},
+{atSec:105,type:'wait',label:'Mexer 1×↻ e 1×↺, depois swirl',dur:25},
+{atSec:130,type:'drain',label:'Drenagem final',dur:80},
+{atSec:210,type:'serve',label:'Servir'}]},
+
+/* Flash Brew (café gelado japonês) — o gelo entra no ORÇAMENTO de água, não além dele.
+   40% do líquido é gelo pesado na jarra; os 60% restantes são a água quente dos despejos,
+   o que faz a extração rodar concentrada a ~1:10. Fontes: gota.cafe e dabov.us. */
+{id:'flashbrew',key:'flashbrew',badge:'GELADO',badgeKind:'cold',
+flag:'🧊',champion:'Café gelado japonês',country:'Japão',
+year:2026,isExtra:true,defaultDose:15,title:'Flash Brew',byline:'Técnica tradicional japonesa',
+dripper:'V60 + gelo na jarra',dripperShort:'V60 + gelo',ratio:250/15,iceFrac:0.4,
+tagline:'Extração quente caindo direto no gelo — aroma de coado, servido gelado.',
+desc:'O gelo entra no orçamento de água, não além dele: 40% do rendimento é gelo pesado na jarra antes de começar, e os 60% restantes são a água quente dos despejos. A extração roda concentrada (~1:10) e a diluição acontece no instante em que o café toca o gelo, travando os aromáticos que o resfriamento lento perde. O gelo nunca vai no cone — fica embaixo, depois da extração. Moa um pouco mais fino que o normal.',
+steps:[
+{atSec:0,type:'pour',label:'Bloom',frac:30/250,temp:94,note:'2× a dose · gelo já na jarra'},
+{atSec:40,type:'pour',label:'Despejo principal',frac:120/250,temp:94,note:'espiral contínua · completa a água quente'},
+{atSec:90,type:'drain',label:'Drenagem sobre o gelo',dur:60},
+{atSec:150,type:'wait',label:'Girar a jarra até derreter o gelo',dur:30},
+{atSec:180,type:'serve',label:'Servir sobre gelo fresco'}]},
 ];
 
 /* ═══════════════════════════════════════════
@@ -1097,6 +1165,10 @@ const medals={1:'🥇',2:'🥈',3:'🥉'};
 const rnd=v=>Math.round(v);
 const totalW=()=>dose*R.ratio;
 const pourMl=s=>s.frac?s.frac*totalW():0;
+/* Água efetivamente despejada sobre o café. Igual a totalW() em toda receita comum
+   (as frações somam 1), mas menor no Flash Brew, onde parte do rendimento é o gelo
+   da jarra — sem isso o "TOTAL x de y ml" nunca fecharia durante o preparo. */
+const pourTotal=()=>accumCache.length?accumCache[accumCache.length-1]:totalW();
 /* R1: ratio derivado (ex.: 270/17) é exibido arredondado ao inteiro mais próximo
    quando a diferença é pequena, comunicando a intenção do barista sem perder precisão no cálculo */
 function ratioLabel(r){
@@ -1279,7 +1351,10 @@ return `<span class="rc-tag">💧 <b>${m.pours}</b> despejos</span>`+
 `<span class="rc-tag">⏱ <b>${fmtShort(m.total)}</b></span>`+
 `<span class="rc-tag">🌡 <b>${m.temp}</b></span>`;}
 function metaSpoken(m){
-return m?`${m.pours} despejos, ${Math.round(m.total/60)} minutos, ${m.temp}.`:'';}
+if(!m)return'';
+const min=Math.floor(m.total/60),sec=m.total%60;
+const t=sec?`${min} minuto${min===1?'':'s'} e ${sec} segundos`:`${min} minuto${min===1?'':'s'}`;
+return `${m.pours} despejos, ${t}, ${m.temp}.`;}
 
 /* ═══════════════════════════════════════════
    BUILD RECIPE LIST (extras + anos, com busca/filtro)
@@ -1293,17 +1368,17 @@ let html='';
 if(extras.length){
 html+=`<section class="extras-group" aria-labelledby="extras-h">
 <div class="extras-header"><span class="eh-ic" aria-hidden="true">✨</span>
-<h2 class="eh-t" id="extras-h">Extras · Novidades</h2></div>
+<h2 class="eh-t" id="extras-h">Extras · Fora do WBrC</h2></div>
 ${extras.map(e=>{
 const idx=EXTRAS.indexOf(e),m=recipeMeta(e);
-return `<button type="button" class="extra-card" onclick="pickExtra(${idx})"
-aria-label="${e.badge}: ${e.title}, de ${e.champion}, ${e.country}. ${e.dripper}. ${metaSpoken(m)}">
-<span class="ex-badge">${e.badge}</span>
+return `<button type="button" class="extra-card${e.badgeKind?' kind-'+e.badgeKind:''}" onclick="pickExtra(${idx})"
+aria-label="${e.badge}: ${e.title}, ${e.byline||('de '+e.champion+', '+e.country)}. ${e.dripper}. ${metaSpoken(m)}">
+<span class="ex-badge${e.badgeKind?' badge-'+e.badgeKind:''}">${e.badge}</span>
 <span class="ex-top">
 <span class="ex-flag" aria-hidden="true">${e.flag}</span>
 <span class="ex-head">
 <span class="ex-title">${e.title}</span>
-<span class="ex-author">${e.champion} · ${e.country}</span>
+<span class="ex-author">${e.byline||(e.champion+' · '+e.country)}</span>
 </span>
 <span class="rc-ratio" aria-hidden="true">${ratioLabel(e.ratio)}</span>
 </span>
@@ -1462,8 +1537,24 @@ buildAccumCache();renderSetup();vib(15);
 
 function renderSetup(){
 const tw=totalW();
+const hasIce=!!R.iceFrac;
+const iceMl=hasIce?tw*R.iceFrac:0;
+const hot=pourTotal();
 document.getElementById('dose-val').textContent=dose;
-document.getElementById('water-val').textContent=rnd(tw);
+/* Com gelo, o número grande é a água QUENTE (o que se despeja); o rendimento
+   final vai na sublinha. Sem gelo, os dois são a mesma coisa. */
+document.getElementById('water-label').textContent=hasIce?'Água quente':'Água total';
+document.getElementById('water-val').textContent=rnd(hasIce?hot:tw);
+const wsub=document.getElementById('water-sub');
+if(wsub){
+if(hasIce){wsub.textContent=`rendimento ${rnd(tw)} ml`;wsub.hidden=false;}
+else wsub.hidden=true;
+}
+const iceRow=document.getElementById('ice-row');
+if(iceRow){
+if(hasIce){document.getElementById('ice-val').textContent=rnd(iceMl);iceRow.hidden=false;}
+else iceRow.hidden=true;
+}
 const last=R.steps[R.steps.length-1];
 document.getElementById('time-val').textContent=fmtShort(last.atSec);
 const pours=R.steps.filter(s=>s.type==='pour');
@@ -1481,7 +1572,13 @@ renderTimeline();
 
 /* tabela: despejos + esperas/drenagens, com acumulado por linha */
 let acc=0;
-document.getElementById('pours-table').innerHTML=R.steps.filter(s=>s.type!=='serve').map(s=>{
+const prepRow=hasIce?`<div class="pour-row prep-row">
+<div class="pour-time">🧊</div>
+<div class="pour-name">Gelo na jarra<span class="pour-note">antes de iniciar · o café cai sobre ele</span></div>
+<div class="pour-temp" style="color:var(--text-muted)">—</div>
+<div class="pour-amt">${rnd(iceMl)}g</div>
+</div>`:'';
+document.getElementById('pours-table').innerHTML=prepRow+R.steps.filter(s=>s.type!=='serve').map(s=>{
 if(s.type==='pour'){
 const ml=pourMl(s);acc+=ml;
 return `<div class="pour-row">
@@ -1608,7 +1705,7 @@ if(i===curIdx)d.classList.add('active');
 /* ═══ RENDER STEP ═══ */
 function renderStep(idx){
 const s=R.steps[idx];
-const tw=totalW();
+const tw=pourTotal();
 const area=document.getElementById('step-area');
 
 if(s.type==='pour'){
