@@ -601,9 +601,10 @@ transition:width .45s var(--ease)}
 .accum-val{font-size:62px;font-variant-numeric:tabular-nums}
 .accum-unit{font-size:24px}
 .accum-total{font-size:14px;margin-top:3px}
-/* caixa mantida em 180px: o SVG gerado pelo JS é 180×180 e .ring-time
-   se centraliza por inset:0 — encolher só o CSS descentralizava o número */
+/* SVG agora é responsivo (viewBox sem width/height fixos): a caixa pode
+   encolher em telas baixas sem descentralizar o número em .ring-time */
 .countdown-ring{margin-bottom:20px}
+.countdown-ring svg{display:block;width:100%;height:100%}
 .ring-time{font-size:50px;font-variant-numeric:tabular-nums}
 
 /* ══ FINISH ══ */
@@ -642,6 +643,176 @@ padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px
 .start-btn:active{transform:translateX(-50%) translateY(2px)}
 .step-pour,.step-wait,.step-drain,.step-serve{max-width:560px;margin:0 auto}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   v3 · PAUSA, PROPORÇÃO E CORREÇÕES DE ACESSIBILIDADE
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Contraste (WCAG 2.1 AA, 4.5:1 para texto normal) ──
+   --text-muted era #7d7265 = 4,20:1 sobre o fundo do app: reprovava em
+   .s1-sub, .rc-method, .year-header, .head-count e .tl-axis, todos abaixo
+   de 14px. #8a7f70 sobe para 5,03:1 sobre o fundo e 4,59:1 sobre a surface. */
+:root{--text-muted:#8a7f70;
+/* --terra (#a85b34) rende só 3,61:1 sobre a surface: serve para bordas e
+   fundos (componentes de UI pedem 3:1), não para texto. --terra-text é a
+   mesma família a 5,37:1, usada onde o terracota vira palavra. */
+--terra-text:#c9784a}
+.chip.chip-new{color:var(--terra-text)}
+.extras-header .eh-t,.rn-label{color:var(--terra-text)}
+/* rótulos pequenos sobre caixas tintadas: o tom muted fica em 4,3:1 */
+.ice-note,.stat-unit,.rc-tag{color:var(--text-dim)}
+/* Rótulos sobre caixas tintadas (--blue-bg, --surface) ficariam em 4,28:1
+   mesmo com o tom novo — nesses usa-se o tom mais claro. */
+.stat-label,.next-label,.accum-label,.value-label{color:var(--text-dim)}
+
+/* ── Alvos de toque (WCAG 2.5.5: 44×44 CSS px) ──
+   Chips e presets tinham 30px de altura. App usado com a mão molhada. */
+.chip{min-height:44px;display:inline-flex;align-items:center;padding:0 16px}
+.dose-preset{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px}
+.s1-brand{min-height:44px;padding:0 15px}
+.search-clear{width:44px;height:44px;font-size:22px}
+
+/* ══ BARRA DE AÇÕES DO PREPARO ══ */
+.brew-actions{display:flex;gap:10px;flex-shrink:0;
+padding:12px 18px calc(14px + env(safe-area-inset-bottom));
+border-top:1px solid var(--border);background:linear-gradient(0deg,rgba(26,22,17,.6),transparent)}
+.brew-btn{flex:1;min-height:56px;display:flex;align-items:center;justify-content:center;gap:9px;
+border-radius:14px;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:.2px;
+cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--text);
+transition:background .15s var(--ease),border-color .15s var(--ease),transform .12s var(--ease),color .15s var(--ease)}
+.brew-btn:active{transform:scale(.97)}
+.brew-btn .bb-ic{font-size:17px;line-height:1}
+.bb-pause{border-color:var(--yellow);color:var(--yellow);background:var(--yellow-bg)}
+.bb-pause:active{background:var(--yellow);color:#1a1200}
+.bb-reset{flex:0 0 34%;color:var(--text-dim)}
+.bb-reset:active{background:var(--red);border-color:var(--red);color:#fff}
+/* estado pausado: botão vira "Retomar" em verde */
+#s-brew.paused .bb-pause{border-color:var(--green);color:#04201d;background:var(--green);
+box-shadow:0 6px 24px rgba(42,157,143,.35)}
+.brew-btn[disabled]{opacity:.35;pointer-events:none}
+
+/* ══ ESTADO PAUSADO ══ */
+/* .step-wrap existe só para ancorar o badge: ele precisa ficar FORA de
+   #step-area, cujo innerHTML é reescrito a cada etapa, mas dentro da mesma
+   caixa — ancorado no rodapé da área do card, acima da barra de ações */
+.step-wrap{position:relative;flex:1;display:flex;flex-direction:column;min-height:0}
+/* min-height:0 é obrigatório: sem ele o item flex não encolhe abaixo do
+   conteúdo e o card transborda por cima da barra de ações. overflow-y é a
+   rede de segurança para telas muito baixas. */
+.step-wrap>.step-area{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.step-wrap>.step-area::-webkit-scrollbar{display:none}
+/* .step-wrap é posicionado e vem antes no DOM: sem z-index próprio, a barra
+   de ações ficava embaixo dele e não recebia toque. */
+.brew-actions{position:relative;z-index:2}
+.paused-badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+z-index:3;display:flex;align-items:center;gap:7px;
+padding:9px 18px;border-radius:22px;background:var(--yellow);color:#1a1200;
+font-size:13px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;
+box-shadow:0 6px 24px rgba(240,180,41,.4);animation:pulseBadge 1.6s ease-in-out infinite}
+.paused-badge[hidden]{display:none}
+@keyframes pulseBadge{0%,100%{opacity:1}50%{opacity:.62}}
+#s-brew.paused .step-pour,#s-brew.paused .step-wait,
+#s-brew.paused .step-drain,#s-brew.paused .step-serve{opacity:.3;filter:saturate(.35)}
+#s-brew.paused .timer-clock{color:var(--yellow)}
+/* congela o que estava animando para não "andar" com o cronômetro parado */
+#s-brew.paused .next-bar{animation-play-state:paused}
+#s-brew.paused .serve-icon{animation-play-state:paused}
+#s-brew.paused .ring-fill{transition:none}
+#s-brew.paused .next-countdown,#s-brew.paused .next-action{opacity:.45}
+
+/* ══ CONTROLE DE PROPORÇÃO ══ */
+.ratio-row{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.ratio-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.ratio-label{font-size:12px;font-weight:700;color:var(--text-dim);
+text-transform:uppercase;letter-spacing:1px}
+.ratio-reset{min-height:34px;padding:0 12px;border-radius:18px;cursor:pointer;font-family:inherit;
+font-size:11px;font-weight:700;color:var(--terra-text);background:transparent;border:1.5px solid var(--terra-text)}
+.ratio-reset b{font-family:'JetBrains Mono',monospace;font-weight:700}
+.ratio-reset:active{background:var(--terra-text);color:#1a0e06}
+.ratio-reset[hidden]{display:none}
+.ratio-control{display:flex;align-items:center;justify-content:center;gap:16px}
+.ratio-btn{width:48px;height:48px;flex-shrink:0;border-radius:14px;cursor:pointer;font-family:inherit;
+background:var(--bg);border:2px solid var(--green);color:var(--green);
+font-size:25px;font-weight:700;display:flex;align-items:center;justify-content:center;
+transition:background .14s var(--ease),color .14s var(--ease),transform .14s var(--ease)}
+.ratio-btn:active{background:var(--green);color:var(--bg);transform:scale(.92)}
+.ratio-val{font-family:'JetBrains Mono',monospace;font-size:34px;font-weight:700;
+color:var(--text);min-width:118px;text-align:center;font-variant-numeric:tabular-nums}
+.ratio-val.custom{color:var(--terra-text)}
+.ratio-hint{margin-top:9px;text-align:center;font-size:10.5px;font-weight:600;color:var(--text-muted)}
+
+/* ══════════════════════════════════════════════════════════
+   MEDIA QUERIES DE ALTURA — ficam no FIM de propósito: precisam vencer
+   as regras base de .paused-badge, .brew-actions e .countdown-ring, que
+   têm a mesma especificidade e são decididas por ordem de origem.
+   ══════════════════════════════════════════════════════════ */
+/* ══ TELAS BAIXAS (≤700px de altura) ══
+   A barra de ações no rodapé custou ~83px. Sem compactar o card, ele
+   transbordava a área útil em iPhone SE e em paisagem. */
+@media (max-height:700px){
+.s3-top{padding:11px 16px}
+.timer-clock{font-size:25px}
+.next-bar{padding:9px 16px}
+.next-countdown{font-size:19px}
+.step-area{padding:12px 16px}
+.step-pour,.step-wait,.step-drain,.step-serve{padding:18px 16px;border-radius:18px}
+.step-type{font-size:11px;letter-spacing:1.8px;margin-bottom:7px}
+.step-name{font-size:21px;margin-bottom:14px}
+.step-sub{font-size:11.5px;margin:-10px 0 13px}
+.step-values{gap:11px;margin-bottom:13px}
+.value-box{padding:12px 10px;border-radius:11px}
+.value-label{font-size:10px;margin-bottom:5px}
+.value-main{font-size:34px}
+.step-progress{height:7px;margin-bottom:11px}
+.step-accum-big{padding:10px 14px}
+.accum-label{font-size:10px;letter-spacing:2.4px}
+.accum-val{font-size:44px}
+.accum-unit{font-size:18px}
+.accum-total{font-size:12px}
+.countdown-ring{width:126px;height:126px;margin-bottom:14px}
+.ring-time{font-size:36px}
+.serve-icon{font-size:50px;margin-bottom:14px}
+.brew-actions{padding:9px 16px calc(10px + env(safe-area-inset-bottom))}
+.brew-btn{min-height:48px;font-size:14px}
+.paused-badge{bottom:6px;padding:7px 15px;font-size:12px}
+}
+
+/* ══ PAISAGEM BAIXA ══
+   O manifest trava o PWA instalado em retrato, mas no navegador a paisagem
+   acontece — e a 390px de altura o card não cabia de jeito nenhum. */
+@media (orientation:landscape) and (max-height:520px){
+.s3-top{padding:7px 14px}
+.timer-clock{font-size:21px}
+.next-bar{padding:6px 14px}
+.next-label{font-size:9px}
+.next-action{font-size:11.5px}
+.next-countdown{font-size:16px}
+.step-area{padding:6px 14px}
+.step-pour,.step-wait,.step-drain,.step-serve{padding:11px 16px;border-width:2px;border-radius:14px}
+.step-type{font-size:9.5px;letter-spacing:1.4px;margin-bottom:3px}
+.step-name{font-size:17px;margin-bottom:7px}
+.step-sub{font-size:10.5px;margin:-5px 0 7px}
+.step-values{gap:9px;margin-bottom:9px}
+.value-box{padding:8px}
+.value-label{font-size:9px;margin-bottom:3px}
+.value-main{font-size:26px}
+.value-unit{font-size:10px}
+.step-progress{height:6px;margin-bottom:8px}
+.step-accum-big{padding:6px 12px}
+.accum-label{font-size:9px;letter-spacing:2px;margin-bottom:0}
+.accum-val{font-size:28px}
+.accum-unit{font-size:14px}
+.accum-total{font-size:11px;margin-top:1px}
+.countdown-ring{width:96px;height:96px;margin-bottom:8px}
+.ring-time{font-size:28px}
+.serve-icon{font-size:34px;margin-bottom:8px}
+.brew-actions{padding:7px 14px calc(8px + env(safe-area-inset-bottom))}
+.brew-btn{min-height:44px;font-size:13px}
+/* em paisagem o badge sai do rodapé: ali ele cobria o volume acumulado */
+.paused-badge{top:6px;bottom:auto;left:auto;right:12px;transform:none;
+padding:5px 12px;font-size:11px;letter-spacing:1px}
+}
+
 </style>
 </head>
 <body>
@@ -752,6 +923,18 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 <button class="dose-btn" onclick="changeDose(1)" aria-label="Aumentar dose em 1 grama">+</button>
 </div>
 <div class="dose-presets" id="dose-presets" role="group" aria-label="Doses rápidas"></div>
+<div class="ratio-row">
+<div class="ratio-head">
+<span class="ratio-label" id="ratio-label">Proporção</span>
+<button class="ratio-reset" id="ratio-reset" type="button" hidden onclick="resetRatio()">↺ voltar ao <b id="ratio-base">1:15</b></button>
+</div>
+<div class="ratio-control">
+<button class="ratio-btn" type="button" onclick="changeRatio(-.5)" aria-label="Diminuir proporção, mais concentrado">−</button>
+<span class="ratio-val" id="ratio-val" role="status" aria-live="polite" aria-labelledby="ratio-label">1:15</span>
+<button class="ratio-btn" type="button" onclick="changeRatio(.5)" aria-label="Aumentar proporção, mais diluído">+</button>
+</div>
+<div class="ratio-hint" id="ratio-hint">menor = mais concentrado · maior = mais diluído</div>
+</div>
 <div class="ice-row" id="ice-row" hidden>
 <span class="ice-ic" aria-hidden="true">🧊</span>
 <span class="ice-main">Gelo na jarra <b id="ice-val">100</b> g</span>
@@ -784,7 +967,6 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 <div class="s3-top">
 <div class="timer-clock" id="brew-clock" role="timer" aria-label="Tempo decorrido">00:00</div>
 <div class="progress-dots" id="prog-dots" role="progressbar" aria-label="Progresso das etapas"></div>
-<button class="reset-btn" onclick="confirmReset()" aria-label="Reiniciar preparo">Reset</button>
 </div>
 <div class="s3-main">
 <div class="next-bar" id="next-bar" aria-live="polite">
@@ -794,7 +976,18 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 <span class="next-countdown">—</span>
 </div>
 </div>
+<div class="step-wrap">
 <div class="step-area" id="step-area" role="region" aria-live="assertive" aria-label="Etapa atual"></div>
+<div class="paused-badge" id="paused-badge" role="status" hidden>⏸ Pausado</div>
+</div>
+<div class="brew-actions">
+<button class="brew-btn bb-pause" id="pause-btn" type="button" onclick="togglePause()" aria-label="Pausar o preparo">
+<span class="bb-ic" id="pause-ic" aria-hidden="true">⏸</span><span id="pause-txt">Pausar</span>
+</button>
+<button class="brew-btn bb-reset" type="button" onclick="confirmReset()" aria-label="Reiniciar preparo">
+<span class="bb-ic" aria-hidden="true">⟲</span><span>Reset</span>
+</button>
+</div>
 </div>
 </section>
 
@@ -1129,7 +1322,7 @@ dripper:'Hario V60-03',dripperShort:'V60-03',ratio:500/30,
 tagline:'A receita de V60 mais preparada do mundo — bloom generoso e dois despejos.',
 desc:'Bloom com o dobro da dose e swirl suave para eliminar bolsões secos, depois dois despejos em espiral: 60% da água até 1:15 e o restante até 1:45. Fecha com uma mexida (1× horário, 1× anti-horário) para soltar o café das paredes e um swirl leve que nivela o leito. A drenagem deve terminar por volta de 3:30 — até 4:00 é normal em torras claras.',
 steps:[
-{atSec:0,type:'pour',label:'Bloom',frac:60/500,temp:95,note:'2× a dose · swirl suave logo após'},
+{atSec:0,type:'pour',label:'Bloom',frac:60/500,temp:95,note:'bloom generoso · swirl suave logo após'},
 {atSec:45,type:'pour',label:'2º Despejo',frac:240/500,temp:95,note:'espiral · até 60% da água em ~30s'},
 {atSec:75,type:'pour',label:'3º Despejo',frac:200/500,temp:95,note:'espiral · completa a água em ~30s'},
 {atSec:105,type:'wait',label:'Mexer 1×↻ e 1×↺, depois swirl',dur:25},
@@ -1146,7 +1339,7 @@ dripper:'V60 + gelo na jarra',dripperShort:'V60 + gelo',ratio:250/15,iceFrac:0.4
 tagline:'Extração quente caindo direto no gelo — aroma de coado, servido gelado.',
 desc:'O gelo entra no orçamento de água, não além dele: 40% do rendimento é gelo pesado na jarra antes de começar, e os 60% restantes são a água quente dos despejos. A extração roda concentrada (~1:10) e a diluição acontece no instante em que o café toca o gelo, travando os aromáticos que o resfriamento lento perde. O gelo nunca vai no cone — fica embaixo, depois da extração. Moa um pouco mais fino que o normal.',
 steps:[
-{atSec:0,type:'pour',label:'Bloom',frac:30/250,temp:94,note:'2× a dose · gelo já na jarra'},
+{atSec:0,type:'pour',label:'Bloom',frac:30/250,temp:94,note:'gelo já na jarra · swirl para saturar'},
 {atSec:40,type:'pour',label:'Despejo principal',frac:120/250,temp:94,note:'espiral contínua · completa a água quente'},
 {atSec:90,type:'drain',label:'Drenagem sobre o gelo',dur:60},
 {atSec:150,type:'wait',label:'Girar a jarra até derreter o gelo',dur:30},
@@ -1158,6 +1351,7 @@ steps:[
    ═══════════════════════════════════════════ */
 let R=null,dose=18,t0=null,curIdx=0,ticker=null,audioCtx=null,wlock=null;
 let cameFromVariants=false;
+let paused=false,pausedElapsed=0;   // pausa: congela o relógio e retoma do mesmo ponto
 let lastDose=18;            // R4: lembra a última dose escolhida na sessão
 let finishTimeout=null;     // C1: handle cancelável do overlay de finish
 let accumCache=[];          // R2: acumulado pré-computado por step
@@ -1208,16 +1402,41 @@ return p.length?p.join(' · '):'✓ Equilibrado. Da próxima, repita igual.';
 /* Restaura a dose memorizada desta receita (fallback: última dose da sessão) */
 function restoreDose(){
 const rec=loadStore().recipes&&loadStore().recipes[recipeKey()];
+/* baseRatio = proporção original da receita; serve de âncora para o ajuste
+   fino e para o botão "voltar ao ...". R é sempre um clone, nunca a fonte. */
+if(R&&R.baseRatio==null)R.baseRatio=R.ratio;
+if(R&&rec&&rec.ratio)R.ratio=rec.ratio;
 dose=(rec&&rec.dose)?rec.dose:((R&&R.defaultDose)||lastDose);
 lastDose=dose;
 }
+
+/* ═══ AJUSTE FINO DA PROPORÇÃO ═══
+   Passo de 0,5 dentro de ±3 da receita (e nunca fora de 1:10–1:22).
+   Mantém a estrutura de despejos: só o volume total muda, porque cada
+   despejo é uma fração do total, não um valor absoluto. */
+function ratioBounds(){
+const base=R.baseRatio||R.ratio;
+return{lo:Math.max(10,base-3),hi:Math.min(22,base+3)};
+}
+function changeRatio(d){
+const b=ratioBounds();
+const v=Math.round((R.ratio+d)*2)/2;
+const nv=Math.min(b.hi,Math.max(b.lo,v));
+if(nv===R.ratio){vib(8);return;}
+R.ratio=nv;buildAccumCache();renderSetup();vib(15);
+}
+function resetRatio(){
+if(R.baseRatio==null)return;
+R.ratio=R.baseRatio;buildAccumCache();renderSetup();vib(15);
+}
+function ratioIsCustom(){return R.baseRatio!=null&&Math.abs(R.ratio-R.baseRatio)>1e-9;}
 
 /* Salva a extração ao concluir (auto-log, zero formulário) e memoriza a dose por receita */
 function saveBrew(){
 const key=recipeKey();if(!key)return;
 const s=loadStore();
 s.recipes=s.recipes||{};
-s.recipes[key]={dose:dose,ts:Date.now()};   // avaliação é anexada depois por rateBrew
+s.recipes[key]={dose:dose,ratio:R.ratio,ts:Date.now()};   // avaliação é anexada depois por rateBrew
 s.log=s.log||[];
 s.log.push({key,champion:R.champion,year:R.year,dose:dose,water:rnd(totalW()),ratio:ratioLabel(R.ratio),ts:Date.now()});
 if(s.log.length>300)s.log=s.log.slice(-300);
@@ -1230,7 +1449,7 @@ const key=recipeKey();if(!key)return;
 const tip=coachingTip(a,sg);
 const s=loadStore();
 s.recipes=s.recipes||{};
-s.recipes[key]={...(s.recipes[key]||{}),dose:dose,acid:a,strength:sg,tip:tip,ts:Date.now()};
+s.recipes[key]={...(s.recipes[key]||{}),dose:dose,ratio:R.ratio,acid:a,strength:sg,tip:tip,ts:Date.now()};
 if(s.log&&s.log.length){const L=s.log[s.log.length-1];if(L.key===key){L.acid=a;L.strength=sg;}}
 saveStore(s);
 document.querySelectorAll('#finish-rate .rate-cell').forEach(c=>{c.classList.remove('sel');c.setAttribute('aria-pressed','false');});
@@ -1267,7 +1486,7 @@ const el=document.getElementById('setup-memory');if(!el)return;
 const recs=loadStore().recipes||{};
 const rec=recs[recipeKey()];
 if(rec&&rec.acid!=null&&rec.strength!=null){
-el.innerHTML=`<span class="sm-label">↻ Da última vez (${rec.dose}g)</span><span class="sm-tip">${rec.tip}</span>`;
+el.innerHTML=`<span class="sm-label">↻ Da última vez (${rec.dose}g${rec.ratio?' · '+ratioLabel(rec.ratio):''})</span><span class="sm-tip">${rec.tip}</span>`;
 el.classList.add('show');
 }else if(rec&&rec.dose){
 el.innerHTML=`<span class="sm-label">↻ Última vez</span><span class="sm-tip">você usou ${rec.dose}g nesta receita.</span>`;
@@ -1498,7 +1717,7 @@ ensureAudio();wakeLockOn();
 R=JSON.parse(JSON.stringify(RECIPES.find(r=>r.id===id)));
 cameFromVariants=false;restoreDose();
 buildAccumCache();
-document.getElementById('s2-title').textContent=`${medals[R.place]} ${R.year} · ${R.champion.split(' ').pop()} · ${ratioLabel(R.ratio)}`;
+document.getElementById('s2-title').textContent=`${medals[R.place]} ${R.year} · ${R.champion.split(' ').pop()}`;
 renderSetup();show('s-setup');
 }
 
@@ -1535,6 +1754,21 @@ dose=Math.max(1,Math.min(80,g));lastDose=dose;
 buildAccumCache();renderSetup();vib(15);
 }
 
+function renderRatio(){
+const el=document.getElementById('ratio-val');if(!el)return;
+const custom=ratioIsCustom();
+el.textContent=ratioLabel(R.ratio);
+el.classList.toggle('custom',custom);
+const rst=document.getElementById('ratio-reset');
+if(rst){rst.hidden=!custom;
+if(custom)document.getElementById('ratio-base').textContent=ratioLabel(R.baseRatio);}
+const b=ratioBounds();
+document.querySelectorAll('.ratio-btn').forEach((btn,i)=>{
+const atEdge=i===0?R.ratio<=b.lo:R.ratio>=b.hi;
+btn.disabled=atEdge;btn.style.opacity=atEdge?'.3':'';
+});
+}
+
 function renderSetup(){
 const tw=totalW();
 const hasIce=!!R.iceFrac;
@@ -1568,6 +1802,7 @@ else note.hidden=true;
 }
 
 renderDosePresets();
+renderRatio();
 renderTimeline();
 
 /* tabela: despejos + esperas/drenagens, com acumulado por linha */
@@ -1644,7 +1879,11 @@ tick();
    ═══════════════════════════════════════════ */
 function startBrew(){
 if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
+/* curIdx PRECISA ser zerado antes de setPaused(): ela decide se o botão de
+   pausa fica desabilitado olhando R.steps[curIdx].type==='serve', e o preparo
+   anterior deixou curIdx no último passo. */
 t0=Date.now();curIdx=0;
+setPaused(false);
 buildDots();
 renderStep(0);          // 1º pour renderizado em silêncio: o beep "DESPEJE!" do countdown é a deixa
 updateDots();
@@ -1652,6 +1891,43 @@ buildNextBar();
 clearInterval(ticker);
 ticker=setInterval(brewTick,80);
 }
+
+/* ═══ PAUSA / RETOMADA ═══
+   t0 é o instante zero. Pausar guarda o decorrido e para o ticker; retomar
+   recua t0 pelo mesmo decorrido, de modo que (Date.now()-t0) volta a bater
+   exatamente com o ponto em que parou — sem acumular erro entre pausas. */
+function setPaused(v){
+paused=v;pausedElapsed=v?pausedElapsed:0;
+const sc=document.getElementById('s-brew');
+sc.classList.toggle('paused',v);
+const badge=document.getElementById('paused-badge');
+if(badge)badge.hidden=!v;
+const btn=document.getElementById('pause-btn');
+if(btn){
+document.getElementById('pause-ic').textContent=v?'▶':'⏸';
+document.getElementById('pause-txt').textContent=v?'Retomar':'Pausar';
+btn.setAttribute('aria-label',v?'Retomar o preparo':'Pausar o preparo');
+/* no passo "servir" o cronômetro já parou sozinho: nada a pausar */
+const atEnd=R&&R.steps[curIdx]&&R.steps[curIdx].type==='serve';
+btn.disabled=atEnd&&!v;
+}
+}
+function pauseBrew(){
+if(paused||!ticker)return;
+pausedElapsed=(Date.now()-t0)/1000;
+clearInterval(ticker);ticker=null;
+paused=true;setPaused(true);
+beep(392,.16,.22);vib(30);
+}
+function resumeBrew(){
+if(!paused)return;
+t0=Date.now()-pausedElapsed*1000;
+paused=false;setPaused(false);
+clearInterval(ticker);ticker=setInterval(brewTick,80);
+brewTick();                    // repinta na hora, sem esperar o próximo tick
+beep(659,.16,.22);vib(30);
+}
+function togglePause(){paused?resumeBrew():pauseBrew();}
 
 function brewTick(){
 const elapsed=(Date.now()-t0)/1000;
@@ -1676,6 +1952,7 @@ buildNextBar();         // M1: estrutura da next-bar reconstruída só ao trocar
 /* C2: ao atingir o "servir", para o cronômetro imediatamente (não 4,5s depois) */
 if(s.type==='serve'){
 clearInterval(ticker);ticker=null;
+setPaused(false);          // desabilita "Pausar": não há mais o que pausar
 document.getElementById('brew-clock').textContent=fmtMs(Date.now()-t0);
 if(finishTimeout)clearTimeout(finishTimeout);
 finishTimeout=setTimeout(showFinish,4500);   // C1: cancelável
@@ -1745,7 +2022,7 @@ area.innerHTML=`<div class="step-wait">
 <div class="step-type">⏱ AGUARDAR</div>
 <div class="step-name">${s.label}</div>
 <div class="countdown-ring">
-<svg width="180" height="180" viewBox="0 0 180 180">
+<svg viewBox="0 0 180 180" preserveAspectRatio="xMidYMid meet">
 <circle class="ring-bg" cx="90" cy="90" r="78"/>
 <circle class="ring-fill" id="ring-fill" cx="90" cy="90" r="78"
 stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="0"/>
@@ -1761,7 +2038,7 @@ area.innerHTML=`<div class="step-drain">
 <div class="step-type">⬇ DRENAGEM</div>
 <div class="step-name">${s.label}</div>
 <div class="countdown-ring">
-<svg width="180" height="180" viewBox="0 0 180 180">
+<svg viewBox="0 0 180 180" preserveAspectRatio="xMidYMid meet">
 <circle class="ring-bg" cx="90" cy="90" r="78"/>
 <circle class="ring-fill" id="ring-fill" cx="90" cy="90" r="78"
 stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="0"/>
@@ -1848,6 +2125,7 @@ f.classList.add('show');f.setAttribute('aria-hidden','false');
 function stopBrew(){
 if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
 clearInterval(ticker);ticker=null;wakeLockOff();
+paused=false;pausedElapsed=0;setPaused(false);
 }
 
 /* ═══ RESET (M5: modal custom; M4: mantém tela acesa pós-reset) ═══ */
