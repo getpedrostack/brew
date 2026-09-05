@@ -813,6 +813,35 @@ color:var(--text);min-width:118px;text-align:center;font-variant-numeric:tabular
 padding:5px 12px;font-size:11px;letter-spacing:1px}
 }
 
+
+/* ══ ESCALA DE TEMPO POR DOSE ══ */
+.tscale-row{display:flex;align-items:flex-start;gap:12px;margin-top:16px;padding-top:15px;
+border-top:1px solid var(--border)}
+.tscale-row[hidden]{display:none}
+/* o botão tem 44px de altura (alvo de toque); o trilho visível de 31px é um
+   filho centrado — o interruptor não precisa parecer maior para ser tocável */
+.tscale-sw{flex-shrink:0;width:52px;min-height:44px;display:flex;align-items:center;
+justify-content:center;background:none;border:none;padding:0;cursor:pointer;font-family:inherit}
+.ts-track{display:block;position:relative;width:52px;height:31px;border-radius:16px;
+background:var(--bg);border:2px solid var(--border);
+transition:background .18s var(--ease),border-color .18s var(--ease)}
+.ts-knob{position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;
+background:var(--text-muted);transition:transform .18s var(--ease),background .18s var(--ease)}
+.tscale-sw[aria-checked="true"] .ts-track{background:var(--green-bg);border-color:var(--green)}
+.tscale-sw[aria-checked="true"] .ts-knob{transform:translateX(21px);background:var(--green)}
+.ts-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ts-label{font-size:13px;font-weight:700;color:var(--text)}
+.ts-detail{font-size:11.5px;font-weight:600;color:var(--text-dim);line-height:1.45}
+.ts-detail b{font-family:'JetBrains Mono',monospace;color:var(--green)}
+
+/* ══ AVISO DE CARGA (dose alta para o dripper) ══ */
+.brew-warn{display:flex;align-items:flex-start;gap:11px;margin-bottom:18px;
+padding:13px 15px;border-radius:13px;background:var(--yellow-bg);
+border:2px solid var(--yellow);border-left-width:4px}
+.brew-warn[hidden]{display:none}
+.bw-ic{font-size:17px;line-height:1.3;flex-shrink:0;color:var(--yellow)}
+.bw-text{font-size:12.5px;font-weight:600;color:var(--text-dim);line-height:1.5}
+.bw-text b{color:var(--yellow);font-weight:800}
 </style>
 </head>
 <body>
@@ -935,6 +964,14 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 </div>
 <div class="ratio-hint" id="ratio-hint">menor = mais concentrado · maior = mais diluído</div>
 </div>
+<div class="tscale-row" id="tscale-row" hidden>
+<button class="tscale-sw" id="tscale-sw" type="button" role="switch" aria-checked="true"
+aria-labelledby="tscale-label" onclick="toggleTimeScale()"><span class="ts-track"><span class="ts-knob"></span></span></button>
+<span class="ts-body">
+<span class="ts-label" id="tscale-label">Tempos ajustados à dose</span>
+<span class="ts-detail" id="tscale-detail"></span>
+</span>
+</div>
 <div class="ice-row" id="ice-row" hidden>
 <span class="ice-ic" aria-hidden="true">🧊</span>
 <span class="ice-main">Gelo na jarra <b id="ice-val">100</b> g</span>
@@ -951,6 +988,10 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 <div><span class="stat-val" id="time-val">00:00</span></div>
 </div>
 </div>
+</div>
+<div class="brew-warn" id="brew-warn" hidden role="status">
+<span class="bw-ic" aria-hidden="true">⚠</span>
+<span class="bw-text" id="brew-warn-text"></span>
 </div>
 <div class="pours-section">
 <h3 class="pours-title"><span>Despejos</span><span class="pt-n" id="pours-count"></span></h3>
@@ -999,7 +1040,7 @@ const RECIPES=[
 // ═══ 2025 Jakarta ═══
 {id:'peng2025',year:2025,place:1,flag:'🇨🇳',champion:'George Jinyang Peng',country:'China',
 dripper:'Solo Dripper + Melodrip',ratio:14,
-steps:[
+designDose:15,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:30/210,temp:96},
 {atSec:30,type:'wait',label:'Aguardar bloom',dur:30},
 {atSec:60,type:'pour',label:'Despejo Melodrip',frac:180/210,temp:80},
@@ -1008,7 +1049,7 @@ steps:[
 {atSec:210,type:'serve',label:'Servir'}]},
 {id:'prawiro2025',year:2025,place:2,flag:'🇮🇩',champion:'Bayu Prawiro',country:'Indonésia',
 dripper:'Origami',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:50/300,temp:92},
 {atSec:45,type:'pour',label:'2º Despejo',frac:75/300,temp:92},
 {atSec:90,type:'pour',label:'3º Despejo',frac:75/300,temp:92},
@@ -1016,7 +1057,7 @@ steps:[
 {atSec:200,type:'serve',label:'Servir'}]},
 {id:'escobar2025',year:2025,place:3,flag:'🇨🇴',champion:'Carlos Escobar',country:'Colômbia',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:45,type:'pour',label:'2º Despejo',frac:100/300,temp:93},
 {atSec:90,type:'pour',label:'3º Despejo',frac:75/300,temp:93},
@@ -1025,7 +1066,7 @@ steps:[
 // ═══ 2024 Chicago ═══
 {id:'wolfl2024',year:2024,place:1,flag:'🇦🇹',champion:'Martin Wölfl',country:'Áustria',
 dripper:'OREA V4',ratio:270/17,
-steps:[
+designDose:17,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:60/270,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:60/270,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:50/270,temp:93},
@@ -1033,7 +1074,7 @@ steps:[
 {atSec:200,type:'serve',label:'Servir'}]},
 {id:'iidaka2024',year:2024,place:2,flag:'🇯🇵',champion:'Wataru Iidaka',country:'Japão',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:45,type:'pour',label:'2º Despejo',frac:100/300,temp:93},
 {atSec:90,type:'pour',label:'3º Despejo',frac:75/300,temp:93},
@@ -1041,7 +1082,7 @@ steps:[
 {atSec:180,type:'serve',label:'Servir'}]},
 {id:'wibawa2024',year:2024,place:3,flag:'🇮🇩',champion:'Ryan Wibawa',country:'Indonésia',
 dripper:'Origami',ratio:16,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:60/320,temp:92},
 {atSec:40,type:'pour',label:'2º Despejo',frac:80/320,temp:92},
 {atSec:85,type:'pour',label:'3º Despejo',frac:80/320,temp:92},
@@ -1050,7 +1091,7 @@ steps:[
 // ═══ 2023 Athens ═══
 {id:'medina2023',year:2023,place:1,flag:'🇨🇱',champion:'Carlos Medina',country:'Chile',
 dripper:'Origami Air S',ratio:250/15.5,
-steps:[
+designDose:15.5,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:50/250,temp:91},
 {atSec:30,type:'pour',label:'2º Despejo',frac:50/250,temp:91},
 {atSec:60,type:'pour',label:'3º Despejo',frac:50/250,temp:91},
@@ -1059,7 +1100,7 @@ steps:[
 {atSec:170,type:'serve',label:'Servir'}]},
 {id:'giachgia2023',year:2023,place:2,flag:'🇬🇷',champion:'Savina Giachgia',country:'Grécia',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:70/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:70/300,temp:93},
@@ -1068,7 +1109,7 @@ steps:[
 {atSec:210,type:'serve',label:'Servir'}]},
 {id:'um2023',year:2023,place:3,flag:'🇧🇷',champion:'Garam Victor Um',country:'Brasil',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1077,7 +1118,7 @@ steps:[
 // ═══ 2022 Melbourne ═══
 {id:'hsu2022',year:2022,place:1,flag:'🇹🇼',champion:'Sherry Hsu',country:'Taiwan',
 dripper:'OREA V3',ratio:200/14,
-steps:[
+designDose:14,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:50/200,temp:70},
 {atSec:30,type:'pour',label:'2º Despejo',frac:50/200,temp:95},
 {atSec:60,type:'pour',label:'3º Despejo',frac:50/200,temp:95},
@@ -1085,7 +1126,7 @@ steps:[
 {atSec:150,type:'serve',label:'Servir'}]},
 {id:'liftee2022',year:2022,place:2,flag:'🇺🇸',champion:'Elika Liftee',country:'EUA',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1093,7 +1134,7 @@ steps:[
 {atSec:190,type:'serve',label:'Servir'}]},
 {id:'tan2022',year:2022,place:3,flag:'🇸🇬',champion:'Elysia Tan',country:'Singapura',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:70/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:70/300,temp:93},
@@ -1103,7 +1144,7 @@ steps:[
 // ═══ 2021 Milan ═══
 {id:'winton2021',year:2021,place:1,flag:'🇨🇭',champion:'Matt Winton',country:'Suíça',
 dripper:'Hario V60 Metal',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:60/300,temp:93},
 {atSec:30,type:'wait',label:'Aguardar',dur:30},
 {atSec:60,type:'pour',label:'2º Despejo',frac:60/300,temp:88},
@@ -1113,7 +1154,7 @@ steps:[
 {atSec:210,type:'serve',label:'Servir'}]},
 {id:'hatakeyama2021',year:2021,place:2,flag:'🇯🇵',champion:'Daiki Hatakeyama',country:'Japão',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:30,type:'wait',label:'Aguardar bloom',dur:25},
 {atSec:55,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
@@ -1122,7 +1163,7 @@ steps:[
 {atSec:195,type:'serve',label:'Servir'}]},
 {id:'liftee2021',year:2021,place:3,flag:'🇺🇸',champion:'Elika Liftee',country:'EUA',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1131,7 +1172,7 @@ steps:[
 // ═══ 2019 Boston ═══
 {id:'du2019',year:2019,place:1,flag:'🇨🇳',champion:'Jia Ning Du',country:'China',
 dripper:'Origami',ratio:194/16,
-steps:[
+designDose:16,steps:[
 {atSec:0,type:'pour',label:'1º Despejo Rápido',frac:60/194,temp:94},
 {atSec:30,type:'wait',label:'Aguardar',dur:25},
 {atSec:55,type:'pour',label:'2º Despejo Lento',frac:80/194,temp:94},
@@ -1140,7 +1181,7 @@ steps:[
 {atSec:120,type:'serve',label:'Servir'}]},
 {id:'rolf2019',year:2019,place:2,flag:'🇸🇪',champion:'Patrik Rolf',country:'Suécia',
 dripper:'April Brewer',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:35,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:70,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1148,7 +1189,7 @@ steps:[
 {atSec:180,type:'serve',label:'Servir'}]},
 {id:'galtieri2019',year:2019,place:3,flag:'🇮🇹',champion:'Alessandro Galtieri',country:'Itália',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:35,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:75,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1157,7 +1198,7 @@ steps:[
 // ═══ 2018 Brazil ═══
 {id:'fukahori2018',year:2018,place:1,flag:'🇨🇭',champion:'Emi Fukahori',country:'Suíça',
 dripper:'GINA',ratio:220/17,
-steps:[
+designDose:17,steps:[
 {atSec:0,type:'pour',label:'1ª Fase · Imersão',frac:50/220,temp:80},
 {atSec:45,type:'pour',label:'2ª Fase · Drip',frac:100/220,temp:95},
 {atSec:105,type:'pour',label:'3ª Fase · Final',frac:70/220,temp:80},
@@ -1165,7 +1206,7 @@ steps:[
 {atSec:175,type:'serve',label:'Servir'}]},
 {id:'beng2018',year:2018,place:2,flag:'🇲🇾',champion:'Regine Wai Yee Beng',country:'Malásia',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:35,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:70,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1173,7 +1214,7 @@ steps:[
 {atSec:180,type:'serve',label:'Servir'}]},
 {id:'koremtas2018',year:2018,place:3,flag:'🇬🇷',champion:'Stathis Koremtas',country:'Grécia',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:35,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:75,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1182,13 +1223,13 @@ steps:[
 // ═══ 2017 Budapest ═══
 {id:'wang2017',year:2017,place:1,flag:'🇹🇼',champion:'Chad Wang',country:'Taiwan',
 dripper:'Hario V60',ratio:250/15,
-steps:[
+designDose:15,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:30/250,temp:92},
 {atSec:30,type:'pour',label:'Despejo Principal',frac:220/250,temp:92},
 {atSec:110,type:'serve',label:'Servir'}]},
 {id:'corra2017',year:2017,place:2,flag:'🇦🇺',champion:'Sam Corra',country:'Austrália',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:35,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:75,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1196,7 +1237,7 @@ steps:[
 {atSec:185,type:'serve',label:'Servir'}]},
 {id:'koremtas2017',year:2017,place:3,flag:'🇬🇷',champion:'Stathis Koremtas',country:'Grécia',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:70/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:70/300,temp:93},
@@ -1208,7 +1249,7 @@ steps:[
 isVariantGroup:true,dripper:'V60 · Método 4:6'},
 {id:'wallgren2016',year:2016,place:2,flag:'🇫🇮',champion:'Mikaela Wallgren',country:'Finlândia',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:80/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:80/300,temp:93},
@@ -1216,21 +1257,21 @@ steps:[
 {atSec:190,type:'serve',label:'Servir'}]},
 {id:'wang2016',year:2016,place:3,flag:'🇹🇼',champion:'Chad Wang',country:'Taiwan',
 dripper:'Hario V60',ratio:250/15,
-steps:[
+designDose:15,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:30/250,temp:92},
 {atSec:30,type:'pour',label:'Despejo Principal',frac:220/250,temp:92},
 {atSec:110,type:'serve',label:'Servir'}]},
 // ═══ 2015 Gothenburg ═══
 {id:'tollefsen2015',year:2015,place:1,flag:'🇳🇴',champion:'Odd-Steinar Tøllefsen',country:'Noruega',
 dripper:'Hario V60 Glass',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:40/300,temp:92},
 {atSec:35,type:'pour',label:'Despejo Contínuo',frac:260/300,temp:92},
 {atSec:200,type:'drain',label:'Drenagem final',dur:10},
 {atSec:210,type:'serve',label:'Servir'}]},
 {id:'iatridis2015',year:2015,place:2,flag:'🇬🇷',champion:'Konstantinos Iatridis',country:'Grécia',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:92},
 {atSec:35,type:'pour',label:'2º Despejo',frac:80/300,temp:92},
 {atSec:75,type:'pour',label:'3º Despejo',frac:80/300,temp:92},
@@ -1238,7 +1279,7 @@ steps:[
 {atSec:185,type:'serve',label:'Servir'}]},
 {id:'prager2015',year:2015,place:3,flag:'🇨🇭',champion:'Benjamin Prager',country:'Suíça',
 dripper:'Hario V60',ratio:15,
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:50/300,temp:93},
 {atSec:40,type:'pour',label:'2º Despejo',frac:70/300,temp:93},
 {atSec:80,type:'pour',label:'3º Despejo',frac:70/300,temp:93},
@@ -1250,7 +1291,7 @@ steps:[
 /* ═══ KASUYA VARIANTS (separate array) ═══ */
 const KASUYA=[
 {variantName:"Balanceado",emoji:"⚖️",desc:"Receita original WBrC 2016",pourFormula:"60+60 | 60+60+60",
-ratio:15,steps:[
+ratio:15,designDose:20,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:60/300,temp:92,note:'40% · balanceado'},
 {atSec:45,type:'pour',label:'2º Despejo',frac:60/300,temp:92,note:'40% · balanceado'},
 {atSec:90,type:'pour',label:'3º Despejo',frac:60/300,temp:92,note:'60% · corpo médio'},
@@ -1258,7 +1299,7 @@ ratio:15,steps:[
 {atSec:180,type:'pour',label:'5º Despejo',frac:60/300,temp:92,note:'60% · corpo médio'},
 {atSec:210,type:'serve',label:'Servir'}]},
 {variantName:"Doce",emoji:"🍯",desc:"Menos água no 1º pour = mais doçura",pourFormula:"50+70 | 60+60+60",
-ratio:15,steps:[
+ratio:15,designDose:20,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:50/300,temp:92,note:'40% · mais doçura'},
 {atSec:45,type:'pour',label:'2º Despejo',frac:70/300,temp:92,note:'40% · mais doçura'},
 {atSec:90,type:'pour',label:'3º Despejo',frac:60/300,temp:92,note:'60% · corpo médio'},
@@ -1266,7 +1307,7 @@ ratio:15,steps:[
 {atSec:180,type:'pour',label:'5º Despejo',frac:60/300,temp:92,note:'60% · corpo médio'},
 {atSec:210,type:'serve',label:'Servir'}]},
 {variantName:"Ácido",emoji:"🍋",desc:"Mais água no 1º pour = mais acidez",pourFormula:"70+50 | 60+60+60",
-ratio:15,steps:[
+ratio:15,designDose:20,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:70/300,temp:92,note:'40% · mais acidez'},
 {atSec:45,type:'pour',label:'2º Despejo',frac:50/300,temp:92,note:'40% · mais acidez'},
 {atSec:90,type:'pour',label:'3º Despejo',frac:60/300,temp:92,note:'60% · corpo médio'},
@@ -1274,14 +1315,14 @@ ratio:15,steps:[
 {atSec:180,type:'pour',label:'5º Despejo',frac:60/300,temp:92,note:'60% · corpo médio'},
 {atSec:210,type:'serve',label:'Servir'}]},
 {variantName:"Leve",emoji:"☁️",desc:"Menos pours = corpo mais leve",pourFormula:"60+60 | 90+90",
-ratio:15,steps:[
+ratio:15,designDose:20,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:60/300,temp:92,note:'40% · balanceado'},
 {atSec:45,type:'pour',label:'2º Despejo',frac:60/300,temp:92,note:'40% · balanceado'},
 {atSec:90,type:'pour',label:'3º Despejo',frac:90/300,temp:92,note:'60% · corpo leve'},
 {atSec:135,type:'pour',label:'4º Despejo',frac:90/300,temp:92,note:'60% · corpo leve'},
 {atSec:210,type:'serve',label:'Servir'}]},
 {variantName:"Intenso",emoji:"💪",desc:"Mais pours = corpo mais intenso",pourFormula:"60+60 | 45+45+45+45",
-ratio:15,steps:[
+ratio:15,designDose:20,steps:[
 {atSec:0,type:'pour',label:'1º Despejo',frac:60/300,temp:92,note:'40% · balanceado'},
 {atSec:45,type:'pour',label:'2º Despejo',frac:60/300,temp:92,note:'40% · balanceado'},
 {atSec:90,type:'pour',label:'3º Despejo',frac:45/300,temp:92,note:'60% · corpo intenso'},
@@ -1298,7 +1339,7 @@ year:2026,isExtra:true,defaultDose:20,title:'Método 10 Despejos',
 dripper:'V60 / V60 Neo · 10 despejos',dripperShort:'V60 / Neo',ratio:15,
 tagline:'A receita nova do Kasuya — dez despejos iguais, moagem super grossa.',
 desc:'Dez despejos de 30 ml: bloom de 30 s e depois cadência fixa de 15 s. Moagem super grossa (40–45 clicks no C40) com água a 96 °C — o grão grosso compensa a agitação constante, entregando doçura e textura sedosa sem amargor.',
-steps:[
+designDose:20,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:30/300,temp:96,note:'1/10 · bloom de 30s'},
 {atSec:30,type:'pour',label:'2º Despejo',frac:30/300,temp:96,note:'2/10 · cadência 15s'},
 {atSec:45,type:'pour',label:'3º Despejo',frac:30/300,temp:96,note:'3/10 · cadência 15s'},
@@ -1321,7 +1362,7 @@ year:2020,isExtra:true,defaultDose:30,title:'Ultimate V60',
 dripper:'Hario V60-03',dripperShort:'V60-03',ratio:500/30,
 tagline:'A receita de V60 mais preparada do mundo — bloom generoso e dois despejos.',
 desc:'Bloom com o dobro da dose e swirl suave para eliminar bolsões secos, depois dois despejos em espiral: 60% da água até 1:15 e o restante até 1:45. Fecha com uma mexida (1× horário, 1× anti-horário) para soltar o café das paredes e um swirl leve que nivela o leito. A drenagem deve terminar por volta de 3:30 — até 4:00 é normal em torras claras.',
-steps:[
+designDose:30,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:60/500,temp:95,note:'bloom generoso · swirl suave logo após'},
 {atSec:45,type:'pour',label:'2º Despejo',frac:240/500,temp:95,note:'espiral · até 60% da água em ~30s'},
 {atSec:75,type:'pour',label:'3º Despejo',frac:200/500,temp:95,note:'espiral · completa a água em ~30s'},
@@ -1338,7 +1379,7 @@ year:2026,isExtra:true,defaultDose:15,title:'Flash Brew',byline:'Técnica tradic
 dripper:'V60 + gelo na jarra',dripperShort:'V60 + gelo',ratio:250/15,iceFrac:0.4,
 tagline:'Extração quente caindo direto no gelo — aroma de coado, servido gelado.',
 desc:'O gelo entra no orçamento de água, não além dele: 40% do rendimento é gelo pesado na jarra antes de começar, e os 60% restantes são a água quente dos despejos. A extração roda concentrada (~1:10) e a diluição acontece no instante em que o café toca o gelo, travando os aromáticos que o resfriamento lento perde. O gelo nunca vai no cone — fica embaixo, depois da extração. Moa um pouco mais fino que o normal.',
-steps:[
+designDose:15,steps:[
 {atSec:0,type:'pour',label:'Bloom',frac:30/250,temp:94,note:'gelo já na jarra · swirl para saturar'},
 {atSec:40,type:'pour',label:'Despejo principal',frac:120/250,temp:94,note:'espiral contínua · completa a água quente'},
 {atSec:90,type:'drain',label:'Drenagem sobre o gelo',dur:60},
@@ -1351,7 +1392,8 @@ steps:[
    ═══════════════════════════════════════════ */
 let R=null,dose=18,t0=null,curIdx=0,ticker=null,audioCtx=null,wlock=null;
 let cameFromVariants=false;
-let paused=false,pausedElapsed=0;   // pausa: congela o relógio e retoma do mesmo ponto
+let paused=false,pausedElapsed=0;
+let finalMs=null;                  // tempo congelado no 'servir', para a tela final não somar os 4,5s do overlay   // pausa: congela o relógio e retoma do mesmo ponto
 let lastDose=18;            // R4: lembra a última dose escolhida na sessão
 let finishTimeout=null;     // C1: handle cancelável do overlay de finish
 let accumCache=[];          // R2: acumulado pré-computado por step
@@ -1405,6 +1447,10 @@ const rec=loadStore().recipes&&loadStore().recipes[recipeKey()];
 /* baseRatio = proporção original da receita; serve de âncora para o ajuste
    fino e para o botão "voltar ao ...". R é sempre um clone, nunca a fonte. */
 if(R&&R.baseRatio==null)R.baseRatio=R.ratio;
+/* baseSteps = cronograma da receita, intocado. Toda escala é recalculada a
+   partir dele, nunca aplicada em cima do resultado anterior — senão o fator
+   se acumularia a cada mudança de dose. */
+if(R&&R.baseSteps==null)R.baseSteps=JSON.parse(JSON.stringify(R.steps));
 if(R&&rec&&rec.ratio)R.ratio=rec.ratio;
 dose=(rec&&rec.dose)?rec.dose:((R&&R.defaultDose)||lastDose);
 lastDose=dose;
@@ -1423,11 +1469,11 @@ const b=ratioBounds();
 const v=Math.round((R.ratio+d)*2)/2;
 const nv=Math.min(b.hi,Math.max(b.lo,v));
 if(nv===R.ratio){vib(8);return;}
-R.ratio=nv;buildAccumCache();renderSetup();vib(15);
+R.ratio=nv;recompute();vib(15);
 }
 function resetRatio(){
 if(R.baseRatio==null)return;
-R.ratio=R.baseRatio;buildAccumCache();renderSetup();vib(15);
+R.ratio=R.baseRatio;recompute();vib(15);
 }
 function ratioIsCustom(){return R.baseRatio!=null&&Math.abs(R.ratio-R.baseRatio)>1e-9;}
 
@@ -1678,6 +1724,7 @@ function pickExtra(i){
 ensureAudio();wakeLockOn();
 R=JSON.parse(JSON.stringify(EXTRAS[i]));
 cameFromVariants=false;restoreDose();
+applyTimeScale();
 buildAccumCache();
 document.getElementById('s2-title').textContent=`✨ ${R.title}`;
 renderSetup();show('s-setup');
@@ -1706,6 +1753,7 @@ dripper:'V60 · 4:6 '+v.variantName+' '+v.emoji,
 steps:JSON.parse(JSON.stringify(v.steps))};
 R.key='kasuya_'+v.variantName;
 cameFromVariants=true;restoreDose();
+applyTimeScale();
 buildAccumCache();
 document.getElementById('s2-title').textContent=`🥇 2016 · Kasuya · ${v.variantName} ${v.emoji}`;
 renderSetup();show('s-setup');
@@ -1716,6 +1764,7 @@ function pickRecipe(id){
 ensureAudio();wakeLockOn();
 R=JSON.parse(JSON.stringify(RECIPES.find(r=>r.id===id)));
 cameFromVariants=false;restoreDose();
+applyTimeScale();
 buildAccumCache();
 document.getElementById('s2-title').textContent=`${medals[R.place]} ${R.year} · ${R.champion.split(' ').pop()}`;
 renderSetup();show('s-setup');
@@ -1751,7 +1800,95 @@ aria-pressed="${g===dose}" aria-label="Usar ${g} gramas" onclick="setDose(${g})"
 }
 function setDose(g){
 dose=Math.max(1,Math.min(80,g));lastDose=dose;
-buildAccumCache();renderSetup();vib(15);
+recompute();vib(15);
+}
+
+
+/* ═══════════════════════════════════════════
+   ESCALA DE TEMPO POR DOSE
+
+   Uma receita de competição é desenhada para uma dose específica (designDose,
+   derivada do volume de projeto de cada receita). Mudar a dose no mesmo dripper
+   muda a geometria da cama, e o cronograma original deixa de descrever o que vai
+   acontecer.
+
+   O que NÃO se faz aqui: esticar o tempo proporcionalmente à dose. O tempo de
+   percolação não é proporcional à massa. Num cone, a altura da cama cresce com a
+   raiz cúbica do volume e a área de escoamento com o quadrado dessa altura, o que
+   põe o tempo em dose^(2/3). O ajuste log-log das 37 receitas do app dá expoente
+   entre 0,44 e 0,74 conforme o recorte — coerente com 2/3, incompatível com 1.
+
+   E o bloom não escala: é cinética de degasagem (liberação de CO₂), governada
+   pelo relógio, não pela massa. Por isso a fase inicial fica congelada e só o que
+   vem depois dela é reescalado.
+
+   Premissa declarada ao usuário: mesmo dripper da receita. Trocar de dripper
+   (V60-02 → 03) muda a geometria e invalida a conta — é justamente o que o aviso
+   de carga sugere quando o volume fica grande demais.
+   ═══════════════════════════════════════════ */
+const TIME_EXP=2/3;
+let timeScaleOn=true;
+function loadTimeScale(){const v=loadStore().timeScale;timeScaleOn=(v===undefined)?true:!!v;}
+function saveTimeScale(){const st=loadStore();st.timeScale=timeScaleOn;saveStore(st);}
+const doseFactor=()=>(R&&R.designDose)?dose/R.designDose:1;
+const timeFactor=()=>(R&&R.designDose&&timeScaleOn)?Math.pow(doseFactor(),TIME_EXP):1;
+/* só vale falar em escala quando a dose realmente saiu do projeto */
+const scaleIsActive=()=>!!(R&&R.designDose&&Math.abs(doseFactor()-1)>0.02);
+const fmtDose=g=>String(g).replace('.',',')+' g';
+
+/* Fim do bloom = instante do SEGUNDO despejo. Não dá para usar base[1]:
+   em peng2025, winton2021, hatakeyama2021 e du2019 o passo 1 é o `wait` do
+   bloom, ou seja, o seu INÍCIO — congelar ali esticava a própria espera de
+   degasagem com a dose (a 80 g, os 30 s do Peng viravam 92 s). */
+function bloomEndOf(base){
+for(let i=1;i<base.length;i++)if(base[i].type==='pour')return base[i].atSec;
+return base.length>1?base[1].atSec:0;
+}
+function applyTimeScale(){
+if(!R||!R.baseSteps)return;
+const f=timeFactor(),base=R.baseSteps;
+const bloomEnd=bloomEndOf(base);
+R.steps=base.map(st=>({...st,
+atSec:st.atSec<=bloomEnd?st.atSec:Math.round(bloomEnd+(st.atSec-bloomEnd)*f)}));
+/* monotonicidade: o arredondamento pode colidir dois passos muito próximos */
+for(let i=1;i<R.steps.length;i++)
+if(R.steps[i].atSec<=R.steps[i-1].atSec)R.steps[i].atSec=R.steps[i-1].atSec+1;
+/* dur do anel tem de continuar sendo o intervalo até o passo seguinte */
+R.steps.forEach((st,i)=>{if(st.dur!=null&&R.steps[i+1])st.dur=R.steps[i+1].atSec-st.atSec;});
+}
+function recompute(){applyTimeScale();buildAccumCache();renderSetup();}
+function toggleTimeScale(){timeScaleOn=!timeScaleOn;saveTimeScale();recompute();vib(15);}
+
+function renderTimeScale(){
+const row=document.getElementById('tscale-row');if(!row)return;
+if(!scaleIsActive()){row.hidden=true;return;}
+row.hidden=false;
+document.getElementById('tscale-sw').setAttribute('aria-checked',String(timeScaleOn));
+const orig=R.baseSteps[R.baseSteps.length-1].atSec;
+const now=R.steps[R.steps.length-1].atSec;
+document.getElementById('tscale-detail').innerHTML=timeScaleOn
+?`Receita desenhada para ${fmtDose(R.designDose)}. Depois do bloom, tudo desloca: <b>${fmtShort(orig)} → ${fmtShort(now)}</b>. Assume o mesmo dripper.`
+:`Receita desenhada para ${fmtDose(R.designDose)}. Usando os tempos originais (<b>${fmtShort(orig)}</b>) em ${fmtDose(dose)}.`;
+}
+
+/* Aviso de carga — o teto de 3:30 é META, não trava: o app não pode encurtar
+   uma percolação. Então em vez de truncar o número, ele diz o que fazer. */
+function renderBrewWarn(){
+const el=document.getElementById('brew-warn');if(!el)return;
+const total=R.steps[R.steps.length-1].atSec;
+/* Mede a água que PASSA no cone, não o rendimento: no Flash Brew 40% do
+   rendimento é gelo na jarra e nunca toca a cama. E compara com o volume de
+   projeto da própria receita, em vez de presumir que todo mundo usa V60-02 —
+   a Hoffmann é desenhada para 500 ml num V60-03 e avisava contra si mesma. */
+const water=pourTotal();
+const fracSum=R.baseSteps.filter(x=>x.type==='pour').reduce((a,x)=>a+x.frac,0);
+const designWater=R.designDose?R.designDose*(R.baseRatio||R.ratio)*fracSum:0;
+const m=[];
+if(total>225)m.push(`Nesta dose o preparo vai a <b>${fmtShort(total)}</b> — acima do teto de 3:30 que nenhuma das 37 receitas do app ultrapassa. Cama mais funda escoa mais devagar: moa 2–3 clicks mais grosso para trazer o tempo de volta.`);
+if(designWater&&water>designWater*1.35)m.push(`<b>${rnd(water)} ml</b> no cone é ${Math.round((water/designWater-1)*100)}% acima dos ${rnd(designWater)} ml para que esta receita foi montada — provavelmente mais do que comporta o dripper da receita (${R.dripperShort||R.dripper}). Subir de dripper (V60-03, Chemex ou equivalente) preserva a geometria da cama, que é o que de fato governa o escoamento.`);
+if(!m.length){el.hidden=true;return;}
+document.getElementById('brew-warn-text').innerHTML=m.join('<br><br>');
+el.hidden=false;
 }
 
 function renderRatio(){
@@ -1803,6 +1940,8 @@ else note.hidden=true;
 
 renderDosePresets();
 renderRatio();
+renderTimeScale();
+renderBrewWarn();
 renderTimeline();
 
 /* tabela: despejos + esperas/drenagens, com acumulado por linha */
@@ -1835,8 +1974,7 @@ renderSetupMemory();
 function changeDose(d){
 dose=Math.max(1,Math.min(80,dose+d));
 lastDose=dose;          // R4: memoriza para a próxima receita
-buildAccumCache();      // R2: ml absolutos mudam com a dose, recomputa
-renderSetup();
+recompute();            // R2: ml absolutos E cronograma mudam com a dose
 }
 
 /* ═══════════════════════════════════════════
@@ -1882,7 +2020,7 @@ if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
 /* curIdx PRECISA ser zerado antes de setPaused(): ela decide se o botão de
    pausa fica desabilitado olhando R.steps[curIdx].type==='serve', e o preparo
    anterior deixou curIdx no último passo. */
-t0=Date.now();curIdx=0;
+t0=Date.now();curIdx=0;finalMs=null;
 setPaused(false);
 buildDots();
 renderStep(0);          // 1º pour renderizado em silêncio: o beep "DESPEJE!" do countdown é a deixa
@@ -1953,7 +2091,8 @@ buildNextBar();         // M1: estrutura da next-bar reconstruída só ao trocar
 if(s.type==='serve'){
 clearInterval(ticker);ticker=null;
 setPaused(false);          // desabilita "Pausar": não há mais o que pausar
-document.getElementById('brew-clock').textContent=fmtMs(Date.now()-t0);
+finalMs=Date.now()-t0;
+document.getElementById('brew-clock').textContent=fmtMs(finalMs);
 if(finishTimeout)clearTimeout(finishTimeout);
 finishTimeout=setTimeout(showFinish,4500);   // C1: cancelável
 }
@@ -2112,7 +2251,7 @@ if(cd)cd.textContent=secsLeft>0?fmtS(Math.ceil(secsLeft)):'agora';
 function showFinish(){
 if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
 clearInterval(ticker);ticker=null;wakeLockOff();
-document.getElementById('finish-time').textContent=fmtMs(Date.now()-t0);
+document.getElementById('finish-time').textContent=fmtMs(finalMs!=null?finalMs:(Date.now()-t0));
 document.getElementById('finish-sub').innerHTML=R.isExtra
 ?`✨ ${R.title} · ${R.champion}<br>${R.dripper}`
 :`${medals[R.place]||''} ${R.champion} · ${R.year}<br>${R.dripper}`;
@@ -2145,6 +2284,7 @@ show('s-setup');
 }
 
 /* ═══ INIT ═══ */
+loadTimeScale();
 buildChips();
 buildList();
 
