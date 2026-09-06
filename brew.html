@@ -317,6 +317,8 @@ letter-spacing:.3px;cursor:pointer}
 .flash{position:fixed;inset:0;background:var(--green);opacity:0;pointer-events:none;
 z-index:99;transition:opacity .05s}
 .flash.show{opacity:.15}
+.flash.flash-risk{background:var(--red)}
+.flash.flash-risk.show{opacity:.3}
 
 /* ═══════════════════════════════════════════════════════════
    v2 · REFINAMENTO DE INTERFACE
@@ -713,7 +715,7 @@ box-shadow:0 6px 24px rgba(240,180,41,.4);animation:pulseBadge 1.6s ease-in-out 
 @keyframes pulseBadge{0%,100%{opacity:1}50%{opacity:.62}}
 #s-brew.paused .step-pour,#s-brew.paused .step-wait,
 #s-brew.paused .step-drain,#s-brew.paused .step-serve{opacity:.3;filter:saturate(.35)}
-#s-brew.paused .timer-clock{color:var(--yellow)}
+/* a cor do relógio pertence só à escada de tempo; a pausa usa opacidade */
 /* congela o que estava animando para não "andar" com o cronômetro parado */
 #s-brew.paused .next-bar{animation-play-state:paused}
 #s-brew.paused .serve-icon{animation-play-state:paused}
@@ -842,6 +844,86 @@ border:2px solid var(--yellow);border-left-width:4px}
 .bw-ic{font-size:17px;line-height:1.3;flex-shrink:0;color:var(--yellow)}
 .bw-text{font-size:12.5px;font-weight:600;color:var(--text-dim);line-height:1.5}
 .bw-text b{color:var(--yellow);font-weight:800}
+
+/* ═══════════════════════════════════════════════════════════
+   v4 · ESTADOS DE TEMPO DA EXTRAÇÃO
+   Uma única escada de estados, com prioridade determinística, dona exclusiva
+   da cor do relógio: ok → atenção (passou do alvo) → risco (4:00).
+   A pausa NÃO disputa essa cor — ela se anuncia pelo badge, pelo card escurecido
+   e pelo botão verde, e apenas reduz a opacidade do bloco do relógio.
+   ═══════════════════════════════════════════════════════════ */
+.s3-top{align-items:center;gap:14px}
+.clock-block{display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:0;
+transition:opacity .2s var(--ease)}
+.timer-clock{transition:color .3s var(--ease),text-shadow .3s var(--ease)}
+.timer-meta{font-size:11px;font-weight:700;letter-spacing:.2px;color:var(--text-dim);
+white-space:nowrap;font-variant-numeric:tabular-nums;transition:color .3s var(--ease)}
+
+/* ── estado OK: mantém a aparência atual ── */
+#s3-top[data-tstate="ok"] .timer-clock{color:var(--text)}
+#s3-top[data-tstate="ok"] .timer-meta{color:var(--text-dim)}
+
+/* ── ATENÇÃO: passou do alvo da receita, ainda abaixo de 4:00 ── */
+/* escoando: informativo, não alerta — não pode usar o amarelo da atenção */
+#s3-top[data-tstate="draining"] .timer-clock{color:var(--cream)}
+#s3-top[data-tstate="draining"] .timer-meta{color:var(--cream)}
+#s3-top[data-tstate="over"] .timer-clock{color:var(--yellow)}
+#s3-top[data-tstate="over"] .timer-meta{color:var(--yellow)}
+
+/* ── RISCO: 4:00. Vence qualquer outro estado. ── */
+#s3-top[data-tstate="risk"]{background:linear-gradient(180deg,rgba(223,111,84,.16),transparent)}
+#s3-top[data-tstate="risk"] .timer-clock{color:var(--red);
+text-shadow:0 0 22px rgba(223,111,84,.45);animation:riskPulse 2s ease-in-out infinite}
+#s3-top[data-tstate="risk"] .timer-meta{color:var(--red)}
+@keyframes riskPulse{0%,100%{opacity:1}50%{opacity:.72}}
+/* congelado ao encerrar: mesma cor, sem pulsar — é resultado, não alerta vivo */
+#s3-top[data-frozen="1"] .timer-clock{animation:none;text-shadow:none}
+
+/* pausa: escurece o bloco, mas não toca na cor de estado */
+#s-brew.paused .clock-block{opacity:.5}
+
+/* ── barra de água em dois tons ── */
+.step-progress{position:relative}
+.step-progress-add{position:absolute;inset:0;height:100%;border-radius:5px;
+background:var(--teal-deep);opacity:.55;transition:width .45s var(--ease)}
+.step-progress-fill{position:relative;z-index:1}
+
+/* ── faixa de lacuna: o app ficou em segundo plano ── */
+.gap-notice{display:flex;align-items:center;gap:9px;flex-shrink:0;cursor:pointer;
+padding:10px 18px;background:var(--yellow-bg);border-bottom:2px solid var(--yellow);
+font-size:12px;font-weight:700;color:var(--yellow);line-height:1.4}
+.gap-notice[hidden]{display:none}
+.gap-notice::after{content:'✕';margin-left:auto;opacity:.6;font-size:13px;flex-shrink:0}
+
+/* preset que marca a dose de projeto da receita */
+.dose-preset.is-design{border-style:dashed}
+.dose-preset.is-design.on{border-style:solid}
+
+/* aviso de setup em dois níveis, mesma escada do relógio */
+.brew-warn.lv-risk{background:var(--red-bg);border-color:var(--red)}
+.brew-warn.lv-risk .bw-ic{color:var(--red)}
+.brew-warn.lv-risk .bw-text b{color:var(--red)}
+
+.bb-done{border-color:var(--green)!important;color:#04201d!important;
+background:var(--green)!important;box-shadow:0 6px 24px rgba(42,157,143,.35)}
+.fin-cmp{display:inline-block;margin-top:9px;padding:4px 12px;border-radius:14px;
+font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;
+background:rgba(255,255,255,.06);color:var(--text-dim)}
+.fin-cmp[data-tstate="draining"]{background:rgba(240,220,192,.1);color:var(--cream)}
+.fin-cmp[data-tstate="over"]{background:var(--yellow-bg);color:var(--yellow)}
+.fin-cmp[data-tstate="risk"]{background:var(--red-bg);color:var(--red)}
+.fin-auto{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--yellow)}
+
+#time-box[data-tstate="over"]{border-color:var(--yellow);background:var(--yellow-bg)}
+#time-box[data-tstate="over"] .stat-val{color:var(--yellow)}
+#time-box[data-tstate="risk"]{border-color:var(--red);background:var(--red-bg)}
+#time-box[data-tstate="risk"] .stat-val{color:var(--red)}
+
+@media (max-height:700px){.timer-meta{font-size:10px}}
+@media (orientation:landscape) and (max-height:520px){
+.timer-meta{font-size:9.5px}
+.gap-notice{padding:6px 14px;font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -983,7 +1065,7 @@ aria-labelledby="tscale-label" onclick="toggleTimeScale()"><span class="ts-track
 <div><span class="stat-val" id="water-val" aria-live="polite">270</span><span class="stat-unit">ml</span></div>
 <div class="stat-sub" id="water-sub" hidden></div>
 </div>
-<div class="stat-box">
+<div class="stat-box" id="time-box" data-tstate="ok">
 <div class="stat-label">Tempo total</div>
 <div><span class="stat-val" id="time-val">00:00</span></div>
 </div>
@@ -1005,10 +1087,14 @@ aria-labelledby="tscale-label" onclick="toggleTimeScale()"><span class="ts-track
 
 <!-- SCREEN 3: BREW -->
 <section id="s-brew" class="screen" aria-label="Preparo em andamento">
-<div class="s3-top">
+<div class="s3-top" id="s3-top">
+<div class="clock-block">
 <div class="timer-clock" id="brew-clock" role="timer" aria-label="Tempo decorrido">00:00</div>
+<div class="timer-meta" id="brew-meta" aria-live="polite">—</div>
+</div>
 <div class="progress-dots" id="prog-dots" role="progressbar" aria-label="Progresso das etapas"></div>
 </div>
+<div class="gap-notice" id="gap-notice" hidden role="alert" onclick="dismissGap()"></div>
 <div class="s3-main">
 <div class="next-bar" id="next-bar" aria-live="polite">
 <div class="next-content">
@@ -1393,31 +1479,46 @@ designDose:15,steps:[
 let R=null,dose=18,t0=null,curIdx=0,ticker=null,audioCtx=null,wlock=null;
 let cameFromVariants=false;
 let paused=false,pausedElapsed=0;
-let finalMs=null;                  // tempo congelado no 'servir', para a tela final não somar os 4,5s do overlay   // pausa: congela o relógio e retoma do mesmo ponto
+let finalMs=null;
+let overtime=false;   // passou do último passo e o barista ainda não confirmou
+let autoFinished=false;  // encerrado pela rede de segurança, não pelo barista
+let cdTimers=[];         // handles do countdown 3-2-1, para poder abortar                  // tempo congelado no 'servir', para a tela final não somar os 4,5s do overlay   // pausa: congela o relógio e retoma do mesmo ponto
 let lastDose=18;            // R4: lembra a última dose escolhida na sessão
-let finishTimeout=null;     // C1: handle cancelável do overlay de finish
-let accumCache=[];          // R2: acumulado pré-computado por step
+let accumCache=[],accumDisp=[];   // acumulado exato e sua versão arredondada para exibição
 const medals={1:'🥇',2:'🥈',3:'🥉'};
 const rnd=v=>Math.round(v);
 const totalW=()=>dose*R.ratio;
 const pourMl=s=>s.frac?s.frac*totalW():0;
+/* ═══ ARREDONDAMENTO CUMULATIVO ═══
+   O ml EXIBIDO de cada despejo é a diferença entre acumulados arredondados, não o
+   arredondamento de cada despejo isolado. Sem isso Σ round(xᵢ) ≠ round(Σ xᵢ): a
+   tabela somava 320 ml enquanto o total dizia 315 (kasuya10 a 21 g). Regra: a
+   aritmética interna usa sempre o valor exato; só a APRESENTAÇÃO passa por aqui. */
+const accumDispAt=i=>accumDisp[i]||0;
+const pourDispAt=i=>accumDispAt(i)-(i>0?accumDispAt(i-1):0);
+const pourTotalDisp=()=>accumDisp.length?accumDisp[accumDisp.length-1]:rnd(totalW());
 /* Água efetivamente despejada sobre o café. Igual a totalW() em toda receita comum
    (as frações somam 1), mas menor no Flash Brew, onde parte do rendimento é o gelo
    da jarra — sem isso o "TOTAL x de y ml" nunca fecharia durante o preparo. */
 const pourTotal=()=>accumCache.length?accumCache[accumCache.length-1]:totalW();
-/* R1: ratio derivado (ex.: 270/17) é exibido arredondado ao inteiro mais próximo
-   quando a diferença é pequena, comunicando a intenção do barista sem perder precisão no cálculo */
+/* ε de 1e-6, não 0,15: com a tolerância antiga a Wölfl (270/17 = 15,88) exibia
+   "1:16" e usava 15,88 — 2 ml de diferença a 17 g, 9 ml a 80 g, e Wölfl e Medina
+   (16,13) mostravam o MESMO rótulo com águas diferentes. Uma casa decimal limita
+   o desvio do rótulo a 0,05 × dose. */
+const RATIO_EPS=1e-6;
 function ratioLabel(r){
 const round=Math.round(r);
-return Math.abs(r-round)<0.15?`1:${round}`:`1:${r.toFixed(1)}`;
+return Math.abs(r-round)<RATIO_EPS?`1:${round}`:`1:${r.toFixed(1).replace('.',',')}`;
 }
 const fmtMs=ms=>{const s=Math.floor(ms/1000),m=Math.floor(s/60);return`${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`};
 const fmtS=s=>{s=Math.max(0,s);return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`};
-const fmtShort=s=>{s=Math.max(0,Math.round(s));return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
+/* floor em todos os formatadores: com round, fmtS(59,6)="00:59" e
+   fmtShort(59,6)="1:00" — o mesmo valor exibido com 1 minuto de diferença */
+const fmtShort=s=>{s=Math.max(0,Math.floor(s));return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
 /* R2: pré-computa o volume acumulado em cada índice ao carregar a receita (O(n) uma vez, não por render) */
 function buildAccumCache(){
-accumCache=[];let sum=0;
-R.steps.forEach(s=>{if(s.type==='pour')sum+=pourMl(s);accumCache.push(sum);});
+accumCache=[];accumDisp=[];let sum=0;
+R.steps.forEach(s=>{if(s.type==='pour')sum+=pourMl(s);accumCache.push(sum);accumDisp.push(Math.round(sum));});
 }
 const accumulatedAt=idx=>accumCache[idx]||0;
 
@@ -1437,7 +1538,7 @@ const p=[];
 if(a===0)p.push('🍋 Azedo → moa mais fino ou suba a temperatura');
 else if(a===2)p.push('🔥 Amargo → moa mais grosso ou baixe 2–3°C');
 if(sg===0)p.push('💪 Forte → reduza a dose ou aumente a água');
-else if(sg===2)p.push('☁️ Fraco → aumente a dose ou reduza a água');
+else if(sg===2)p.push('☁️ Leve → aumente a dose ou reduza a água');
 return p.length?p.join(' · '):'✓ Equilibrado. Da próxima, repita igual.';
 }
 
@@ -1451,8 +1552,17 @@ if(R&&R.baseRatio==null)R.baseRatio=R.ratio;
    partir dele, nunca aplicada em cima do resultado anterior — senão o fator
    se acumularia a cada mudança de dose. */
 if(R&&R.baseSteps==null)R.baseSteps=JSON.parse(JSON.stringify(R.steps));
-if(R&&rec&&rec.ratio)R.ratio=rec.ratio;
-dose=(rec&&rec.dose)?rec.dose:((R&&R.defaultDose)||lastDose);
+/* valor persistido é entrada externa: revalida contra os limites da receita
+   (um ratio:99 gravado à mão dava 1980 ml num Solo Dripper sem nenhum aviso) */
+if(R&&rec&&typeof rec.ratio==='number'&&isFinite(rec.ratio)){
+const b=ratioBounds();R.ratio=Math.min(b.hi,Math.max(b.lo,rec.ratio));}
+/* Abre na dose de PROJETO, não na última dose da sessão. As frações foram
+   autoradas para fechar em números redondos ali; abrir em 18 g punha 30 das 37
+   receitas fora do ponto de projeto e 7 delas já com a tabela divergindo do total. */
+/* dose persistida também é entrada externa: coage e clampa na mesma faixa que
+   os controles usam (1–80 g). Antes, dose:'20' virava 80 g num toque em "+". */
+const dRec=rec&&Number(rec.dose);
+dose=(dRec&&isFinite(dRec))?Math.min(80,Math.max(1,dRec)):((R&&(R.designDose||R.defaultDose))||lastDose);
 lastDose=dose;
 }
 
@@ -1460,16 +1570,23 @@ lastDose=dose;
    Passo de 0,5 dentro de ±3 da receita (e nunca fora de 1:10–1:22).
    Mantém a estrutura de despejos: só o volume total muda, porque cada
    despejo é uma fração do total, não um valor absoluto. */
+const RATIO_STEP=0.5;    // grade do ajuste fino
+const RATIO_BAND=3;      // quanto se pode afastar da proporção da receita
+const RATIO_MIN=10,RATIO_MAX=22;   // faixa física do coado
 function ratioBounds(){
 const base=R.baseRatio||R.ratio;
-return{lo:Math.max(10,base-3),hi:Math.min(22,base+3)};
+return{lo:Math.max(RATIO_MIN,base-RATIO_BAND),hi:Math.min(RATIO_MAX,base+RATIO_BAND)};
 }
+/* Os passos são contados a partir da proporção da RECEITA, não da grade absoluta.
+   Antes, arredondar para a grade e depois clampar em lo/hi dava passos de 0,382 e
+   0,118 na Wölfl — e dois valores diferentes exibindo o mesmo rótulo. */
+const ratioNotch=()=>Math.round((R.ratio-(R.baseRatio||R.ratio))/RATIO_STEP);
+function ratioAt(n){return (R.baseRatio||R.ratio)+n*RATIO_STEP;}
+function ratioNotchOk(n){const b=ratioBounds(),v=ratioAt(n);return v>=b.lo-1e-9&&v<=b.hi+1e-9;}
 function changeRatio(d){
-const b=ratioBounds();
-const v=Math.round((R.ratio+d)*2)/2;
-const nv=Math.min(b.hi,Math.max(b.lo,v));
-if(nv===R.ratio){vib(8);return;}
-R.ratio=nv;recompute();vib(15);
+const n=ratioNotch()+(d>0?1:-1);
+if(!ratioNotchOk(n)){vib(8);return;}
+R.ratio=ratioAt(n);recompute();vib(15);
 }
 function resetRatio(){
 if(R.baseRatio==null)return;
@@ -1484,7 +1601,12 @@ const s=loadStore();
 s.recipes=s.recipes||{};
 s.recipes[key]={dose:dose,ratio:R.ratio,ts:Date.now()};   // avaliação é anexada depois por rateBrew
 s.log=s.log||[];
-s.log.push({key,champion:R.champion,year:R.year,dose:dose,water:rnd(totalW()),ratio:ratioLabel(R.ratio),ts:Date.now()});
+/* `water` é a água que PASSOU no café (no Flash Brew o rendimento inclui 40% de
+   gelo que nunca toca a cama); `yield` guarda o rendimento quando difere.
+   `ratio` é sempre número — antes era string aqui e number em s.recipes. */
+s.log.push({key,champion:R.champion,year:R.year,dose:dose,water:pourTotalDisp(),
+yield:rnd(totalW()),ratio:R.ratio,target:targetSec(),
+ms:finalMs,auto:autoFinished,ts:Date.now()});
 if(s.log.length>300)s.log=s.log.slice(-300);
 saveStore(s);
 }
@@ -1532,10 +1654,11 @@ const el=document.getElementById('setup-memory');if(!el)return;
 const recs=loadStore().recipes||{};
 const rec=recs[recipeKey()];
 if(rec&&rec.acid!=null&&rec.strength!=null){
-el.innerHTML=`<span class="sm-label">↻ Da última vez (${rec.dose}g${rec.ratio?' · '+ratioLabel(rec.ratio):''})</span><span class="sm-tip">${rec.tip}</span>`;
+const rl=(typeof rec.ratio==='number'&&isFinite(rec.ratio))?' · '+ratioLabel(rec.ratio):'';
+el.innerHTML=`<span class="sm-label">↻ Da última vez (${fmtDose(rec.dose)}${rl})</span><span class="sm-tip">${rec.tip}</span>`;
 el.classList.add('show');
 }else if(rec&&rec.dose){
-el.innerHTML=`<span class="sm-label">↻ Última vez</span><span class="sm-tip">você usou ${rec.dose}g nesta receita.</span>`;
+el.innerHTML=`<span class="sm-label">↻ Última vez</span><span class="sm-tip">você usou ${fmtDose(rec.dose)} nesta receita.</span>`;
 el.classList.add('show');
 }else{el.classList.remove('show');el.innerHTML='';}
 }
@@ -1562,7 +1685,10 @@ if(wlock){try{wlock.release();}catch(e){}wlock=null;}
 document.addEventListener('visibilitychange',()=>{
 if(document.visibilityState==='visible'&&wlActive) wakeLockOn();
 });
-function flash(){const el=document.getElementById('flash');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),100);}
+function flash(kind){const el=document.getElementById('flash');
+el.classList.toggle('flash-risk',kind==='risk');
+el.classList.add('show');
+setTimeout(()=>{el.classList.remove('show');},kind==='risk'?260:100);}
 
 /* ═══ NAVIGATION ═══ */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
@@ -1602,24 +1728,39 @@ return dripperFamily(r.dripper)===filterMode;}
 
 /* metadados derivados dos próprios passos — nada é inventado */
 function recipeMeta(r){
-const steps=r.steps||(r.isVariantGroup?KASUYA[0].steps:null);
+if(r.isVariantGroup){
+/* o card representa as 5 variantes: mostra a faixa real, não a primeira delas
+   (os despejos vão de 4 a 6 conforme o perfil) */
+const ps=KASUYA.map(v=>v.steps.filter(s=>s.type==='pour').length);
+const ts=KASUYA.map(v=>v.steps[v.steps.length-1].atSec);
+const tp=KASUYA.flatMap(v=>v.steps.filter(s=>s.temp).map(s=>s.temp));
+const lo=Math.min.apply(null,ps),hi=Math.max.apply(null,ps);
+const tl=Math.min.apply(null,tp),th=Math.max.apply(null,tp);
+return{pours:lo===hi?String(lo):`${lo}–${hi}`,total:Math.max.apply(null,ts),
+temp:tl===th?tl+'°C':tl+'–'+th+'°C',designDose:20};
+}
+const steps=r.steps;
 if(!steps||!steps.length)return null;
 const pours=steps.filter(s=>s.type==='pour').length;
 const total=steps[steps.length-1].atSec;
 const temps=steps.filter(s=>s.temp).map(s=>s.temp);
+if(!temps.length)return{pours:pours,total:total,temp:'—',designDose:r.designDose};
 const tmin=Math.min.apply(null,temps),tmax=Math.max.apply(null,temps);
-return{pours:pours,total:total,temp:tmin===tmax?tmin+'°C':tmin+'–'+tmax+'°C'};}
+return{pours:pours,total:total,temp:tmin===tmax?tmin+'°C':tmin+'–'+tmax+'°C',designDose:r.designDose};}
 
 function metaTags(m){
 if(!m)return'';
-return `<span class="rc-tag">💧 <b>${m.pours}</b> despejos</span>`+
+/* o card descreve a receita no PONTO DE PROJETO; sem declarar a dose, o tempo
+   aqui contradizia o da tela de setup quando a dose era outra */
+return (m.designDose?`<span class="rc-tag">⚖ <b>${String(m.designDose).replace('.',',')} g</b></span>`:'')+
+`<span class="rc-tag">💧 <b>${m.pours}</b> despejos</span>`+
 `<span class="rc-tag">⏱ <b>${fmtShort(m.total)}</b></span>`+
 `<span class="rc-tag">🌡 <b>${m.temp}</b></span>`;}
 function metaSpoken(m){
 if(!m)return'';
 const min=Math.floor(m.total/60),sec=m.total%60;
 const t=sec?`${min} minuto${min===1?'':'s'} e ${sec} segundos`:`${min} minuto${min===1?'':'s'}`;
-return `${m.pours} despejos, ${t}, ${m.temp}.`;}
+return `${m.designDose?'receita para '+String(m.designDose).replace('.',',')+' gramas, ':''}${m.pours} despejos, ${t}, ${m.temp}.`;}
 
 /* ═══════════════════════════════════════════
    BUILD RECIPE LIST (extras + anos, com busca/filtro)
@@ -1664,7 +1805,7 @@ ${byYear[year].map(r=>{
 const m=recipeMeta(r);
 if(r.isVariantGroup){
 return `<button type="button" class="recipe-card place-${r.place}" onclick="openVariants()"
-aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}, ${r.dripper}. Cinco variações de perfil.">
+aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}, ${r.dripper}. Cinco variações de perfil. ${metaSpoken(m)}">
 <span class="rc-top">
 <span class="rc-place" aria-hidden="true">${medals[r.place]}</span>
 <span class="rc-info">
@@ -1673,6 +1814,7 @@ aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}, ${r.dri
 </span>
 <span class="rc-flag" aria-hidden="true">${r.flag}</span>
 </span>
+<span class="rc-meta" aria-hidden="true">${metaTags(m)}</span>
 <span class="rc-variant-hint">5 variações de perfil →</span>
 </button>`;
 }
@@ -1783,7 +1925,10 @@ let html='';
 for(let i=0;i<steps.length-1;i++){
 const st=steps[i],w=(steps[i+1].atSec-st.atSec)/total*100;
 const isPour=st.type==='pour';
-html+=`<div class="tl-seg${isPour?'':' tl-drain'}" style="width:${w.toFixed(2)}%">${(isPour&&w>6.5)?rnd(pourMl(st)):''}</div>`;
+/* limiar proporcional ao nº de dígitos: com 6,5% fixo, a kasuya10 a 5 g escondia
+   9 dos 10 rótulos e a soma visível virava 8 de 75 ml */
+const lbl=isPour?String(pourDispAt(i)):'';
+html+=`<div class="tl-seg${isPour?'':' tl-drain'}" style="width:${w.toFixed(2)}%">${(lbl&&w>2.2*lbl.length+1)?lbl:''}</div>`;
 }
 el.innerHTML=html;
 ax.innerHTML=`<span>0:00</span><span>${fmtShort(total/2)}</span><span>${fmtShort(total)}</span>`;
@@ -1791,12 +1936,12 @@ ax.innerHTML=`<span>0:00</span><span>${fmtShort(total/2)}</span><span>${fmtShort
 
 function renderDosePresets(){
 const el=document.getElementById('dose-presets');if(!el)return;
-const base=R.defaultDose||18;
+const base=R.designDose||R.defaultDose||18;   // a dose de projeto sempre aparece entre os presets
 const opts=[12,15,18,20,22,25];
 if(opts.indexOf(base)<0)opts.push(base);
 opts.sort((a,b)=>a-b);
-el.innerHTML=opts.map(g=>`<button type="button" class="dose-preset${g===dose?' on':''}"
-aria-pressed="${g===dose}" aria-label="Usar ${g} gramas" onclick="setDose(${g})">${g}g</button>`).join('');
+el.innerHTML=opts.map(g=>`<button type="button" class="dose-preset${g===dose?' on':''}${g===base?' is-design':''}"
+aria-pressed="${g===dose}" aria-label="Usar ${fmtDose(g)}${g===base?', dose de projeto da receita':''}" onclick="setDose(${g})">${String(g).replace('.',',')}g</button>`).join('');
 }
 function setDose(g){
 dose=Math.max(1,Math.min(80,g));lastDose=dose;
@@ -1831,7 +1976,14 @@ let timeScaleOn=true;
 function loadTimeScale(){const v=loadStore().timeScale;timeScaleOn=(v===undefined)?true:!!v;}
 function saveTimeScale(){const st=loadStore();st.timeScale=timeScaleOn;saveStore(st);}
 const doseFactor=()=>(R&&R.designDose)?dose/R.designDose:1;
-const timeFactor=()=>(R&&R.designDose&&timeScaleOn)?Math.pow(doseFactor(),TIME_EXP):1;
+/* Faixa de validade do modelo. Sem piso, kasuya10 a 1 g dava 9 despejos de 2 ml
+   a cada 2 s — fora de qualquer regime real. O fator é limitado e o limite é
+   declarado na interface quando ativo. */
+const SCALE_MIN=0.6,SCALE_MAX=2.2;
+const MIN_POUR_GAP=6;   // s · um humano não despeja e reposiciona a chaleira mais rápido
+const rawTimeFactor=()=>(R&&R.designDose&&timeScaleOn)?Math.pow(doseFactor(),TIME_EXP):1;
+const timeFactor=()=>Math.min(SCALE_MAX,Math.max(SCALE_MIN,rawTimeFactor()));
+const scaleIsClamped=()=>Math.abs(rawTimeFactor()-timeFactor())>1e-9;
 /* só vale falar em escala quando a dose realmente saiu do projeto */
 const scaleIsActive=()=>!!(R&&R.designDose&&Math.abs(doseFactor()-1)>0.02);
 const fmtDose=g=>String(g).replace('.',',')+' g';
@@ -1850,9 +2002,11 @@ const f=timeFactor(),base=R.baseSteps;
 const bloomEnd=bloomEndOf(base);
 R.steps=base.map(st=>({...st,
 atSec:st.atSec<=bloomEnd?st.atSec:Math.round(bloomEnd+(st.atSec-bloomEnd)*f)}));
-/* monotonicidade: o arredondamento pode colidir dois passos muito próximos */
-for(let i=1;i<R.steps.length;i++)
-if(R.steps[i].atSec<=R.steps[i-1].atSec)R.steps[i].atSec=R.steps[i-1].atSec+1;
+/* monotonicidade + intervalo mínimo entre despejos consecutivos */
+for(let i=1;i<R.steps.length;i++){
+const need=(R.steps[i].type==='pour'&&R.steps[i-1].type==='pour')?MIN_POUR_GAP:1;
+if(R.steps[i].atSec<R.steps[i-1].atSec+need)R.steps[i].atSec=R.steps[i-1].atSec+need;
+}
 /* dur do anel tem de continuar sendo o intervalo até o passo seguinte */
 R.steps.forEach((st,i)=>{if(st.dur!=null&&R.steps[i+1])st.dur=R.steps[i+1].atSec-st.atSec;});
 }
@@ -1867,7 +2021,7 @@ document.getElementById('tscale-sw').setAttribute('aria-checked',String(timeScal
 const orig=R.baseSteps[R.baseSteps.length-1].atSec;
 const now=R.steps[R.steps.length-1].atSec;
 document.getElementById('tscale-detail').innerHTML=timeScaleOn
-?`Receita desenhada para ${fmtDose(R.designDose)}. Depois do bloom, tudo desloca: <b>${fmtShort(orig)} → ${fmtShort(now)}</b>. Assume o mesmo dripper.`
+?`Receita desenhada para ${fmtDose(R.designDose)}. Depois do bloom, tudo desloca: <b>${fmtShort(orig)} → ${fmtShort(now)}</b>. Assume o mesmo dripper.${scaleIsClamped()?' <b>Dose fora da faixa validada do modelo</b> — o fator foi limitado.':''}`
 :`Receita desenhada para ${fmtDose(R.designDose)}. Usando os tempos originais (<b>${fmtShort(orig)}</b>) em ${fmtDose(dose)}.`;
 }
 
@@ -1884,10 +2038,16 @@ const water=pourTotal();
 const fracSum=R.baseSteps.filter(x=>x.type==='pour').reduce((a,x)=>a+x.frac,0);
 const designWater=R.designDose?R.designDose*(R.baseRatio||R.ratio)*fracSum:0;
 const m=[];
-if(total>225)m.push(`Nesta dose o preparo vai a <b>${fmtShort(total)}</b> — acima do teto de 3:30 que nenhuma das 37 receitas do app ultrapassa. Cama mais funda escoa mais devagar: moa 2–3 clicks mais grosso para trazer o tempo de volta.`);
+/* Mesmas constantes do relógio ao vivo: o setup projeta o estado em que a
+   extração vai terminar, e o relógio confirma. Antes o limiar era 225 s
+   enquanto o texto falava em 3:30 (210 s) — 15 s de faixa cega. */
+const lvRisk=total>=RISK_SEC;
+if(lvRisk)m.push(`Nesta dose o preparo projeta <b>${fmtShort(total)}</b> — passa de 4:00, onde o risco de amargor cresce. Moa 2–3 clicks mais grosso, ou suba de dripper.`);
+else if(total>CEIL_SEC)m.push(`Nesta dose o preparo projeta <b>${fmtShort(total)}</b> — acima do teto de 3:30 que nenhuma receita do app ultrapassa no seu ponto de projeto. Ainda abaixo de 4:00, mas considere moer 1–2 clicks mais grosso.`);
 if(designWater&&water>designWater*1.35)m.push(`<b>${rnd(water)} ml</b> no cone é ${Math.round((water/designWater-1)*100)}% acima dos ${rnd(designWater)} ml para que esta receita foi montada — provavelmente mais do que comporta o dripper da receita (${R.dripperShort||R.dripper}). Subir de dripper (V60-03, Chemex ou equivalente) preserva a geometria da cama, que é o que de fato governa o escoamento.`);
 if(!m.length){el.hidden=true;return;}
 document.getElementById('brew-warn-text').innerHTML=m.join('<br><br>');
+el.classList.toggle('lv-risk',lvRisk);
 el.hidden=false;
 }
 
@@ -1899,9 +2059,9 @@ el.classList.toggle('custom',custom);
 const rst=document.getElementById('ratio-reset');
 if(rst){rst.hidden=!custom;
 if(custom)document.getElementById('ratio-base').textContent=ratioLabel(R.baseRatio);}
-const b=ratioBounds();
+const n=ratioNotch();
 document.querySelectorAll('.ratio-btn').forEach((btn,i)=>{
-const atEdge=i===0?R.ratio<=b.lo:R.ratio>=b.hi;
+const atEdge=!ratioNotchOk(i===0?n-1:n+1);
 btn.disabled=atEdge;btn.style.opacity=atEdge?'.3':'';
 });
 }
@@ -1911,11 +2071,11 @@ const tw=totalW();
 const hasIce=!!R.iceFrac;
 const iceMl=hasIce?tw*R.iceFrac:0;
 const hot=pourTotal();
-document.getElementById('dose-val').textContent=dose;
+document.getElementById('dose-val').textContent=String(dose).replace('.',',');
 /* Com gelo, o número grande é a água QUENTE (o que se despeja); o rendimento
    final vai na sublinha. Sem gelo, os dois são a mesma coisa. */
 document.getElementById('water-label').textContent=hasIce?'Água quente':'Água total';
-document.getElementById('water-val').textContent=rnd(hasIce?hot:tw);
+document.getElementById('water-val').textContent=pourTotalDisp();   // mesma fonte da tabela nos dois ramos
 const wsub=document.getElementById('water-sub');
 if(wsub){
 if(hasIce){wsub.textContent=`rendimento ${rnd(tw)} ml`;wsub.hidden=false;}
@@ -1928,6 +2088,11 @@ else iceRow.hidden=true;
 }
 const last=R.steps[R.steps.length-1];
 document.getElementById('time-val').textContent=fmtShort(last.atSec);
+/* Régua do PLANO (o cronograma é longo em si?), distinta da régua do RELÓGIO
+   (o preparo está passando do plano?). Compartilham as constantes 3:30 e 4:00,
+   não o referencial: aqui compara-se o plano com o teto do corpus. */
+const tbox=document.getElementById('time-box');
+if(tbox)tbox.setAttribute('data-tstate',last.atSec>=RISK_SEC?'risk':last.atSec>CEIL_SEC?'over':'ok');
 const pours=R.steps.filter(s=>s.type==='pour');
 document.getElementById('pours-count').textContent=`${pours.length} despejo${pours.length>1?'s':''} · ${ratioLabel(R.ratio)}`;
 
@@ -1945,21 +2110,20 @@ renderBrewWarn();
 renderTimeline();
 
 /* tabela: despejos + esperas/drenagens, com acumulado por linha */
-let acc=0;
 const prepRow=hasIce?`<div class="pour-row prep-row">
 <div class="pour-time">🧊</div>
 <div class="pour-name">Gelo na jarra<span class="pour-note">antes de iniciar · o café cai sobre ele</span></div>
 <div class="pour-temp" style="color:var(--text-muted)">—</div>
 <div class="pour-amt">${rnd(iceMl)}g</div>
 </div>`:'';
-document.getElementById('pours-table').innerHTML=prepRow+R.steps.filter(s=>s.type!=='serve').map(s=>{
+document.getElementById('pours-table').innerHTML=prepRow+R.steps.map((s,i)=>{
+if(s.type==='serve')return'';
 if(s.type==='pour'){
-const ml=pourMl(s);acc+=ml;
 return `<div class="pour-row">
 <div class="pour-time">${fmtShort(s.atSec)}</div>
 <div class="pour-name">${s.label}${s.note?`<span class="pour-note">${s.note}</span>`:''}</div>
 <div class="pour-temp">${s.temp}°C</div>
-<div class="pour-amt">+${rnd(ml)}ml<span class="pour-acc">${rnd(acc)} total</span></div>
+<div class="pour-amt">+${pourDispAt(i)}ml<span class="pour-acc">${accumDispAt(i)} total</span></div>
 </div>`;
 }
 return `<div class="pour-row">
@@ -1987,26 +2151,28 @@ const ovl=document.getElementById('cd-overlay');
 const num=document.getElementById('cd-num');
 const msg=document.getElementById('cd-msg');
 ovl.classList.add('show');
+cdTimers.forEach(clearTimeout);cdTimers=[];
 let c=3;
 function tick(){
 num.textContent=c;
 num.style.animation='none';void num.offsetWidth;num.style.animation='';
 beep(350+c*90,.15,.25);vib(50);
 c--;
-if(c>0){setTimeout(tick,900);}
+if(c>0){cdTimers.push(setTimeout(tick,900));}
 else{
-setTimeout(()=>{
+cdTimers.push(setTimeout(()=>{
 num.style.display='none';msg.style.display='none';
 const go=document.createElement('div');
 go.className='countdown-go';go.textContent='DESPEJE!';
 ovl.appendChild(go);
 beep(880,.45,.4);vib(220);
-setTimeout(()=>{
+cdTimers.push(setTimeout(()=>{
 ovl.classList.remove('show');
 go.remove();num.style.display='';msg.style.display='';
+cdTimers=[];
 startBrew();
-},750);
-},900);
+},750));
+},900));
 }
 }
 tick();
@@ -2016,11 +2182,12 @@ tick();
    BREW ENGINE
    ═══════════════════════════════════════════ */
 function startBrew(){
-if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
 /* curIdx PRECISA ser zerado antes de setPaused(): ela decide se o botão de
    pausa fica desabilitado olhando R.steps[curIdx].type==='serve', e o preparo
    anterior deixou curIdx no último passo. */
 t0=Date.now();curIdx=0;finalMs=null;
+riskAnnounced=false;frozenState=null;lastTickEl=0;overtime=false;autoFinished=false;dismissGap();
+applyTimeState(0,false);
 setPaused(false);
 buildDots();
 renderStep(0);          // 1º pour renderizado em silêncio: o beep "DESPEJE!" do countdown é a deixa
@@ -2040,15 +2207,36 @@ const sc=document.getElementById('s-brew');
 sc.classList.toggle('paused',v);
 const badge=document.getElementById('paused-badge');
 if(badge)badge.hidden=!v;
-const btn=document.getElementById('pause-btn');
-if(btn){
-document.getElementById('pause-ic').textContent=v?'▶':'⏸';
-document.getElementById('pause-txt').textContent=v?'Retomar':'Pausar';
-btn.setAttribute('aria-label',v?'Retomar o preparo':'Pausar o preparo');
-/* no passo "servir" o cronômetro já parou sozinho: nada a pausar */
-const atEnd=R&&R.steps[curIdx]&&R.steps[curIdx].type==='serve';
-btn.disabled=atEnd&&!v;
+renderBrewButtons();
 }
+/* Único dono do botão primário da barra de preparo, para que pausa e
+   prorrogação nunca disputem o mesmo controle. */
+function renderBrewButtons(){
+const btn=document.getElementById('pause-btn');if(!btn)return;
+const ic=document.getElementById('pause-ic'),tx=document.getElementById('pause-txt');
+btn.classList.toggle('bb-done',overtime);
+if(overtime){
+ic.textContent='✓';tx.textContent='Concluir';
+btn.setAttribute('aria-label','Concluir a extração e registrar o tempo');
+btn.setAttribute('onclick','finishBrew()');btn.disabled=false;
+}else{
+ic.textContent=paused?'▶':'⏸';tx.textContent=paused?'Retomar':'Pausar';
+btn.setAttribute('aria-label',paused?'Retomar o preparo':'Pausar o preparo');
+btn.setAttribute('onclick','togglePause()');btn.disabled=false;
+}
+}
+/* Encerra de verdade: congela o tempo REAL e o estado que ele representa. */
+function finishBrew(auto){
+if(finalMs!=null)return;
+autoFinished=!!auto;
+finalMs=Date.now()-t0;
+clearInterval(ticker);ticker=null;
+overtime=false;paused=false;
+document.getElementById('brew-clock').textContent=fmtMs(finalMs);
+frozenState=timeState(finalMs/1000);
+applyTimeState(finalMs/1000,true);
+renderBrewButtons();
+showFinish();
 }
 function pauseBrew(){
 if(paused||!ticker)return;
@@ -2067,13 +2255,106 @@ beep(659,.16,.22);vib(30);
 }
 function togglePause(){paused?resumeBrew():pauseBrew();}
 
+
+/* ═══════════════════════════════════════════
+   ESCADA DE ESTADOS DE TEMPO
+
+   Duas constantes, uma escada, usada IGUAL pela projeção do setup e pelo relógio
+   ao vivo — antes o aviso do setup disparava em 225 s enquanto o texto dele
+   afirmava 3:30 (210 s), deixando uma faixa cega de 15 s.
+
+   CEIL_SEC (3:30) é o teto observado no corpus, cada receita no seu ponto de
+   projeto. RISK_SEC (4:00) é o limiar de risco de amargor.
+
+   A escada é APRESENTAÇÃO: nenhum destes valores altera o cronograma calculado.
+
+   Prioridade determinística (a primeira que casar vence):
+     risk  · decorrido >= RISK_SEC                     — vence tudo, inclusive
+                                                         receitas cujo alvo é > 4:00
+     over  · decorrido >  alvo da receita
+     ok    · caso contrário
+   ═══════════════════════════════════════════ */
+const CEIL_SEC=210;    // 3:30 · teto do corpus no ponto de projeto
+const OVERTIME_CAP=120; // s · prorrogação máxima antes de encerrar sozinho
+const RISK_SEC=240;    // 4:00 · risco de amargor
+let riskAnnounced=false, frozenState=null, lastTickEl=0, gapShown=false;
+
+const targetSec=()=>R&&R.steps?R.steps[R.steps.length-1].atSec:0;
+/* Escoar um pouco além do plano é normal — a própria Hoffmann diz "3:30, até
+   4:00 é normal". Sem esta faixa, como quem encerra é o barista (sempre depois
+   do passo servir), TODA extração terminava em amarelo e a cor perdia sentido.
+   30 s é metade da folga de drenagem mediana do corpus (~1:05). */
+const GRACE_SEC=30;
+function timeState(el){
+const t=Math.floor(el),T=targetSec();   // mesmo truncamento do relógio na tela
+if(t>=RISK_SEC)return'risk';            // 4:00 vence tudo
+if(t>T+GRACE_SEC)return'over';          // passou a folga de escoamento
+if(t>T)return'draining';                // escoando dentro do esperado
+return'ok';
+}
+function timerMetaText(el,st){
+const T=targetSec(),e=Math.floor(el),d=Math.abs(e-T);
+if(st==='risk')return e>T?`⚠ amargor · +${fmtShort(d)} do alvo`:`⚠ amargor · alvo ${fmtShort(T)}`;
+if(st==='over')return `alvo ${fmtShort(T)} · +${fmtShort(d)}`;
+if(st==='draining')return `escoando · +${fmtShort(d)}`;
+if(e===T)return `alvo ${fmtShort(T)} · no alvo`;
+return `alvo ${fmtShort(T)} · faltam ${fmtShort(d)}`;
+}
+/* Fonte única do estado visual do relógio. `frozen` congela o resultado da
+   extração encerrada: mesma cor, sem pulsar, sem continuar reagindo. */
+function applyTimeState(el,frozen){
+const top=document.getElementById('s3-top');if(!top)return;
+const st=frozen&&frozenState?frozenState:timeState(el);
+top.setAttribute('data-tstate',st);
+top.setAttribute('data-frozen',frozen?'1':'0');
+const m=document.getElementById('brew-meta');
+if(m)m.textContent=frozen?`encerrado · alvo ${fmtShort(targetSec())}`:timerMetaText(el,st);
+const c=document.getElementById('brew-clock');
+const diz={risk:'risco de amargor',over:'passou do alvo',draining:'escoando após o alvo',ok:'dentro do alvo'};
+if(c)c.setAttribute('aria-label',`Tempo decorrido, ${diz[st]}`);
+return st;
+}
+/* marco único ao cruzar 4:00 — som e clarão distintos do beep de despejo */
+function announceRisk(){
+if(riskAnnounced)return;riskAnnounced=true;
+flash('risk');
+beepSeq([[330,.3,.3,0],[247,.45,.3,.28]]);
+vib([200,80,200]);
+}
+
+/* ═══ LACUNA DE RELÓGIO ═══
+   Aba suspensa ou tela bloqueada fazem o relógio saltar. O café continuou a
+   escoar — pausar seria mentir —, mas os despejos pulados NÃO foram anunciados
+   e a interface não pode dá-los como cumpridos em silêncio. */
+function showGap(fromIdx,toIdx,secs){
+const el=document.getElementById('gap-notice');if(!el)return;
+const pulados=[];
+for(let i=fromIdx+1;i<toIdx;i++)if(R.steps[i].type==='pour')pulados.push(R.steps[i].label);
+el.textContent=`⚠ O app ficou parado ${fmtShort(secs)}${pulados.length?` — ${pulados.length} despejo${pulados.length>1?'s':''} passaram sem aviso (${pulados.join(', ')})`:''}`;
+el.hidden=false;gapShown=true;
+}
+function dismissGap(){const el=document.getElementById('gap-notice');if(el){el.hidden=true;}gapShown=false;}
+
 function brewTick(){
+/* extração encerrada: o resultado está congelado e nenhum tick tardio
+   (chamada direta, timer residual) pode reabri-lo */
+if(finalMs!=null)return;
 const elapsed=(Date.now()-t0)/1000;
 document.getElementById('brew-clock').textContent=fmtMs(Date.now()-t0);
+/* camada de apresentação sobre o tempo REAL — não altera nenhum cálculo */
+applyTimeState(elapsed,false);
+if(elapsed>=RISK_SEC)announceRisk();
 const steps=R.steps;
 let newIdx=0;
 for(let i=0;i<steps.length;i++){if(elapsed>=steps[i].atSec)newIdx=i;}
+/* salto de relógio: o ticker roda a 80 ms, então >3 s é suspensão do app */
+if(lastTickEl&&elapsed-lastTickEl>3&&newIdx>curIdx+1)showGap(curIdx,newIdx,elapsed-lastTickEl);
+lastTickEl=elapsed;
 if(newIdx!==curIdx){curIdx=newIdx;onStepChange(curIdx);}
+/* rede de segurança: sessão abandonada em prorrogação encerra sozinha */
+/* o encerramento automático nunca pode acontecer antes de os 4:00 terem
+   ficado visíveis por um tempo — em receitas curtas o cap chegava aos 3:40 */
+if(overtime&&elapsed>Math.max(targetSec()+OVERTIME_CAP,RISK_SEC+60)){finishBrew(true);return;}
 tickNextBar(elapsed);   // M1: só atualiza o número do countdown
 updateRing(elapsed);
 }
@@ -2089,12 +2370,14 @@ updateDots();           // M1: dots atualizados na transição, não 12×/s
 buildNextBar();         // M1: estrutura da next-bar reconstruída só ao trocar de passo
 /* C2: ao atingir o "servir", para o cronômetro imediatamente (não 4,5s depois) */
 if(s.type==='serve'){
-clearInterval(ticker);ticker=null;
-setPaused(false);          // desabilita "Pausar": não há mais o que pausar
-finalMs=Date.now()-t0;
-document.getElementById('brew-clock').textContent=fmtMs(finalMs);
-if(finishTimeout)clearTimeout(finishTimeout);
-finishTimeout=setTimeout(showFinish,4500);   // C1: cancelável
+/* PRORROGAÇÃO. O cronômetro NÃO para aqui.
+   Parar no "servir" tornava impossível o relógio passar do alvo — e portanto
+   impossível chegar aos 4:00. Pior: registrava como tempo da extração o instante
+   do plano, não o instante real em que a bebida terminou de escoar. Agora o
+   relógio segue correndo e quem encerra é o barista, no botão Concluir. */
+overtime=true;
+renderBrewButtons();
+buildNextBar();
 }
 }
 
@@ -2121,13 +2404,17 @@ if(i===curIdx)d.classList.add('active');
 /* ═══ RENDER STEP ═══ */
 function renderStep(idx){
 const s=R.steps[idx];
-const tw=pourTotal();
+const tw=pourTotalDisp();
 const area=document.getElementById('step-area');
 
 if(s.type==='pour'){
-const ml=pourMl(s);
-const acc=accumulatedAt(idx);
-const pct=Math.min(100,acc/tw*100);
+const ml=pourDispAt(idx);
+const acc=accumDispAt(idx);
+const before=idx>0?accumDispAt(idx-1):0;
+/* barra em dois tons: sólido = o que já está na jarra, claro = o que ESTE
+   despejo acrescenta. Antes a barra já mostrava o despejo como feito. */
+const pctBefore=tw>0?Math.min(100,before/tw*100):0;
+const pctNow=tw>0?Math.min(100,acc/tw*100):0;
 area.innerHTML=`<div class="step-pour">
 <div class="step-type">☕ DESPEJE AGORA</div>
 <div class="step-name">${s.label}</div>
@@ -2135,7 +2422,7 @@ ${s.note?`<div class="step-sub">${s.note}</div>`:''}
 <div class="step-values">
 <div class="value-box">
 <div class="value-label">Adicionar</div>
-<div class="value-main">${rnd(ml)}</div>
+<div class="value-main">${ml}</div>
 <div class="value-unit">ml</div>
 </div>
 <div class="value-box">
@@ -2144,13 +2431,14 @@ ${s.note?`<div class="step-sub">${s.note}</div>`:''}
 <div class="value-unit">C</div>
 </div>
 </div>
-<div class="step-progress">
-<div class="step-progress-fill" style="width:${pct}%"></div>
+<div class="step-progress" role="img" aria-label="${before} de ${tw} ml na jarra; este despejo leva a ${acc}">
+<div class="step-progress-add" style="width:${pctNow}%"></div>
+<div class="step-progress-fill" style="width:${pctBefore}%"></div>
 </div>
 <div class="step-accum-big">
-<div class="accum-label">TOTAL</div>
-<div><span class="accum-val">${rnd(acc)}</span><span class="accum-unit">ml</span></div>
-<div class="accum-total">de ${rnd(tw)} ml</div>
+<div class="accum-label">BALANÇA ATÉ</div>
+<div><span class="accum-val">${acc}</span><span class="accum-unit">ml</span></div>
+<div class="accum-total">de ${tw} ml no total</div>
 </div>
 </div>`;
 }
@@ -2164,7 +2452,7 @@ area.innerHTML=`<div class="step-wait">
 <svg viewBox="0 0 180 180" preserveAspectRatio="xMidYMid meet">
 <circle class="ring-bg" cx="90" cy="90" r="78"/>
 <circle class="ring-fill" id="ring-fill" cx="90" cy="90" r="78"
-stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="0"/>
+stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/>
 </svg>
 <div class="ring-time" id="ring-time">${fmtS(dur)}</div>
 </div>
@@ -2180,7 +2468,7 @@ area.innerHTML=`<div class="step-drain">
 <svg viewBox="0 0 180 180" preserveAspectRatio="xMidYMid meet">
 <circle class="ring-bg" cx="90" cy="90" r="78"/>
 <circle class="ring-fill" id="ring-fill" cx="90" cy="90" r="78"
-stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="0"/>
+stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/>
 </svg>
 <div class="ring-time" id="ring-time">${dur>0?fmtS(dur):'—'}</div>
 </div>
@@ -2191,6 +2479,7 @@ area.innerHTML=`<div class="step-serve">
 <div class="serve-icon" aria-hidden="true">☕</div>
 <div class="step-type">✓ PRONTO</div>
 <div class="step-name">${s.label}</div>
+<div class="step-sub" style="margin:8px 0 0">Toque em <b>Concluir</b> quando terminar de escoar</div>
 </div>`;
 /* finish é agendado de forma cancelável em onStepChange (C1/C2) */
 }
@@ -2201,7 +2490,10 @@ function updateRing(elapsed){
 const s=R.steps[curIdx];
 if(s.type!=='wait'&&s.type!=='drain')return;
 const dur=s.dur||0;
-if(dur<=0)return;
+/* dur<=0 deixava o anel cheio e o relógio em 00:00 para sempre */
+if(dur<=0){const fl=document.getElementById('ring-fill');
+if(fl)fl.setAttribute('stroke-dashoffset','0');
+const tm=document.getElementById('ring-time');if(tm)tm.textContent=fmtS(0);return;}
 const inStep=elapsed-s.atSec;
 const remaining=Math.max(0,dur-inStep);
 const prog=Math.min(1,inStep/dur);
@@ -2218,11 +2510,11 @@ const bar=document.getElementById('next-bar');
 const ns=R.steps[curIdx+1];
 if(!ns){
 bar.className='next-bar';
-bar.innerHTML='<div class="next-content"><span class="next-action" style="text-align:center;color:var(--text-dim)">Última etapa</span></div>';
+bar.innerHTML=`<div class="next-content"><span class="next-action" style="text-align:center;color:var(--text-dim)">${overtime?'⏳ Escoamento final — o relógio segue correndo':'Última etapa'}</span></div>`;
 return;
 }
 let txt='';
-if(ns.type==='pour')txt=`☕ ${ns.label} · ${rnd(pourMl(ns))}ml · ${ns.temp}°C`;
+if(ns.type==='pour')txt=`☕ ${ns.label} · ${pourDispAt(curIdx+1)}ml · ${ns.temp}°C`;
 else if(ns.type==='serve')txt='✓ Servir';
 else if(ns.type==='wait')txt=`⏱ ${ns.label}`;
 else if(ns.type==='drain')txt=`⬇ ${ns.label}`;
@@ -2249,12 +2541,15 @@ if(cd)cd.textContent=secsLeft>0?fmtS(Math.ceil(secsLeft)):'agora';
 
 /* ═══ FINISH ═══ */
 function showFinish(){
-if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
 clearInterval(ticker);ticker=null;wakeLockOff();
 document.getElementById('finish-time').textContent=fmtMs(finalMs!=null?finalMs:(Date.now()-t0));
-document.getElementById('finish-sub').innerHTML=R.isExtra
+const alvo=targetSec(),real=Math.floor((finalMs!=null?finalMs:0)/1000);
+const dif=real-alvo;
+document.getElementById('finish-sub').innerHTML=(R.isExtra
 ?`✨ ${R.title} · ${R.champion}<br>${R.dripper}`
-:`${medals[R.place]||''} ${R.champion} · ${R.year}<br>${R.dripper}`;
+:`${medals[R.place]||''} ${R.champion} · ${R.year}<br>${R.dripper}`)
++`<br><span class="fin-cmp" data-tstate="${frozenState||'ok'}">alvo ${fmtShort(alvo)} · ${dif===0?'no alvo':(dif>0?'+':'−')+fmtShort(Math.abs(dif))}</span>`
++(autoFinished?`<br><span class="fin-auto">encerrado automaticamente — tempo não confirmado</span>`:'');
 saveBrew();             // item 2+3: auto-log + memoriza a dose desta receita
 buildFinishRating();    // item 4: matriz de avaliação fresca a cada extração
 const f=document.getElementById('finish');
@@ -2262,9 +2557,13 @@ f.classList.add('show');f.setAttribute('aria-hidden','false');
 }
 
 function stopBrew(){
-if(finishTimeout){clearTimeout(finishTimeout);finishTimeout=null;}
 clearInterval(ticker);ticker=null;wakeLockOff();
-paused=false;pausedElapsed=0;setPaused(false);
+cdTimers.forEach(clearTimeout);cdTimers=[];      // aborta um countdown em curso
+const ovl=document.getElementById('cd-overlay');
+if(ovl)ovl.classList.remove('show');
+paused=false;pausedElapsed=0;overtime=false;autoFinished=false;setPaused(false);
+riskAnnounced=false;frozenState=null;lastTickEl=0;dismissGap();
+applyTimeState(0,false);
 }
 
 /* ═══ RESET (M5: modal custom; M4: mantém tela acesa pós-reset) ═══ */
@@ -2278,6 +2577,10 @@ m.classList.remove('show');m.setAttribute('aria-hidden','true');
 }
 function doReset(){
 closeResetModal();
+/* o encerramento automático da prorrogação pode ter aberto a tela final por
+   baixo do modal; sair sem escondê-la deixava a lista coberta e inalcançável */
+const f=document.getElementById('finish');
+f.classList.remove('show');f.setAttribute('aria-hidden','true');
 stopBrew();
 wakeLockOn();          // M4: reset volta ao setup (fluxo ativo) → tela permanece acesa
 show('s-setup');
