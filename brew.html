@@ -924,6 +924,54 @@ background:rgba(255,255,255,.06);color:var(--text-dim)}
 .timer-meta{font-size:9.5px}
 .gap-notice{padding:6px 14px;font-size:11px}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   v5 · A FAMÍLIA ÂMBAR PASSA A SIGNIFICAR SÓ ESTADO
+
+   A escada de tempo (v4) tornou amarelo = "atenção" e vermelho = "risco".
+   Três elementos anteriores à escada continuavam usando o mesmo âmbar para
+   coisas que NÃO são estado, e apareciam lado a lado com ela:
+
+     · caixa "Água total" (âmbar fixo) ao lado da "Tempo total" (âmbar quando
+       passa do teto) — duas caixas irmãs, mesma cor, significados diferentes;
+     · botão Pausar (âmbar) na mesma tela em que o relógio fica âmbar;
+     · tempo da tela final em verde fixo, contradizendo o chip de estado
+       logo abaixo — 04:35 verde com "alvo 4:31 · +0:04" vermelho.
+
+   Regra desta rodada: na tela de preparo e no setup, âmbar/vermelho só
+   aparecem quando a escada de tempo os pede. Informação neutra fica neutra,
+   e o olho vai direto ao que mudou de estado.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Água total: informação, não alerta. O rótulo e a unidade já a identificam;
+   agora a ÚNICA cor daquela linha é o estado do tempo. */
+.stat-box.water{border-color:var(--border);background:var(--bg)}
+.stat-box.water .stat-val{color:var(--text)}
+
+/* Pausar: ação sempre disponível, não estado. Continua sendo o primário da
+   barra pelo tamanho e pelo peso, sem tomar emprestada a cor da atenção. */
+.bb-pause{border-color:var(--text-muted);color:var(--text);
+background:var(--surface-2)}
+.bb-pause:active{background:var(--border);color:var(--text)}
+
+/* Tempo da tela final: herda o estado congelado da extração, em vez de ser
+   sempre verde. Um resultado não pode se anunciar como bom e ruim ao mesmo tempo. */
+#finish-time[data-tstate="ok"]{color:var(--green)}
+#finish-time[data-tstate="draining"]{color:var(--cream)}
+#finish-time[data-tstate="over"]{color:var(--yellow)}
+#finish-time[data-tstate="risk"]{color:var(--red)}
+
+/* Aviso do setup: ação primeiro, motivo depois. Era um bloco de ~90 palavras
+   em que a recomendação ficava enterrada na terceira linha da explicação. */
+.bw-item{display:block}
+.bw-item+.bw-item{margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,255,255,.09)}
+.bw-act{display:block;font-size:14px;font-weight:800;color:var(--yellow);
+line-height:1.35;margin-bottom:3px}
+.brew-warn.lv-risk .bw-act{color:var(--red)}
+/* --text-dim, não --text-muted: sobre o fundo vermelho do aviso o muted
+   rende 4,38:1, abaixo do mínimo AA para texto de 11,5px */
+.bw-why{display:block;font-size:11.5px;font-weight:600;color:var(--text-dim);line-height:1.5}
+@media (max-width:380px){.bw-act{font-size:13px}.bw-why{font-size:11px}}
 </style>
 </head>
 <body>
@@ -2041,12 +2089,17 @@ const m=[];
 /* Mesmas constantes do relógio ao vivo: o setup projeta o estado em que a
    extração vai terminar, e o relógio confirma. Antes o limiar era 225 s
    enquanto o texto falava em 3:30 (210 s) — 15 s de faixa cega. */
+/* ação primeiro, motivo depois: sob pressão ninguém lê um parágrafo */
+const item=(acao,motivo)=>`<span class="bw-item"><b class="bw-act">${acao}</b><span class="bw-why">${motivo}</span></span>`;
 const lvRisk=total>=RISK_SEC;
-if(lvRisk)m.push(`Nesta dose o preparo projeta <b>${fmtShort(total)}</b> — passa de 4:00, onde o risco de amargor cresce. Moa 2–3 clicks mais grosso, ou suba de dripper.`);
-else if(total>CEIL_SEC)m.push(`Nesta dose o preparo projeta <b>${fmtShort(total)}</b> — acima do teto de 3:30 que nenhuma receita do app ultrapassa no seu ponto de projeto. Ainda abaixo de 4:00, mas considere moer 1–2 clicks mais grosso.`);
-if(designWater&&water>designWater*1.35)m.push(`<b>${rnd(water)} ml</b> no cone é ${Math.round((water/designWater-1)*100)}% acima dos ${rnd(designWater)} ml para que esta receita foi montada — provavelmente mais do que comporta o dripper da receita (${R.dripperShort||R.dripper}). Subir de dripper (V60-03, Chemex ou equivalente) preserva a geometria da cama, que é o que de fato governa o escoamento.`);
+if(lvRisk)m.push(item('Moa 2–3 clicks mais grosso',
+`${fmtShort(total)} projetado passa de 4:00 — a faixa em que o risco de amargor cresce.`));
+else if(total>CEIL_SEC)m.push(item('Considere moer 1–2 clicks mais grosso',
+`${fmtShort(total)} projetado passa do teto de 3:30 que nenhuma receita do app ultrapassa no seu ponto de projeto.`));
+if(designWater&&water>designWater*1.35)m.push(item('Suba de dripper — V60-03, Chemex ou equivalente',
+`${rnd(water)} ml no cone, ${Math.round((water/designWater-1)*100)}% acima dos ${rnd(designWater)} ml de projeto do ${R.dripperShort||R.dripper}. A geometria da cama é o que governa o escoamento.`));
 if(!m.length){el.hidden=true;return;}
-document.getElementById('brew-warn-text').innerHTML=m.join('<br><br>');
+document.getElementById('brew-warn-text').innerHTML=m.join('');
 el.classList.toggle('lv-risk',lvRisk);
 el.hidden=false;
 }
@@ -2542,7 +2595,9 @@ if(cd)cd.textContent=secsLeft>0?fmtS(Math.ceil(secsLeft)):'agora';
 /* ═══ FINISH ═══ */
 function showFinish(){
 clearInterval(ticker);ticker=null;wakeLockOff();
-document.getElementById('finish-time').textContent=fmtMs(finalMs!=null?finalMs:(Date.now()-t0));
+const ft=document.getElementById('finish-time');
+ft.textContent=fmtMs(finalMs!=null?finalMs:(Date.now()-t0));
+ft.setAttribute('data-tstate',frozenState||'ok');   // mesma verdade do chip abaixo
 const alvo=targetSec(),real=Math.floor((finalMs!=null?finalMs:0)/1000);
 const dif=real-alvo;
 document.getElementById('finish-sub').innerHTML=(R.isExtra
