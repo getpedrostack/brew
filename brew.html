@@ -972,6 +972,215 @@ line-height:1.35;margin-bottom:3px}
    rende 4,38:1, abaixo do mínimo AA para texto de 11,5px */
 .bw-why{display:block;font-size:11.5px;font-weight:600;color:var(--text-dim);line-height:1.5}
 @media (max-width:380px){.bw-act{font-size:13px}.bw-why{font-size:11px}}
+
+/* ═══════════════════════════════════════════════════════════
+   v6 · CONSTRUTOR DE RECEITAS ("Minhas receitas")
+
+   Tela nova montada com as peças que o app já tinha: a nav .s2-nav, o cartão
+   com o gradiente da .dose-section, a régua .timeline, o chip de tempo
+   .pour-time, o interruptor .tscale-sw e o botão fixo .start-btn.
+   Única peça nova de verdade: o stepper compacto (.stp). Um cartão de despejo
+   precisa de dois controles lado a lado em 390px, e o par de botões redondos
+   da dose (60px cada, valor de 112px) não cabe nem uma vez por linha.
+
+   Regra herdada da v5: âmbar/vermelho só significam estado. No construtor só
+   duas coisas são estado — o tempo total do plano (a mesma régua do setup:
+   acima de 3:30 atenção, a partir de 4:00 risco) e a proporção fora da faixa
+   com que o timer trabalha. Todo o resto é neutro ou verde (ação).
+   ═══════════════════════════════════════════════════════════ */
+
+/* modais fechados saem da ordem de tabulação: antes ficavam só transparentes,
+   e o Tab caía em botões invisíveis de "Reiniciar" e "Entendi" */
+.modal-overlay{visibility:hidden;transition:opacity .2s,visibility 0s linear .2s}
+.modal-overlay.show{visibility:visible;transition:opacity .2s,visibility 0s}
+
+/* Botão de confirmação dos modais (Reiniciar, Excluir, Descartar): texto escuro
+   sobre o vermelho — a mesma convenção do texto preto sobre o verde dos botões
+   primários. O branco rendia 3,21:1; AA pede 4,5:1 para texto de 15px. */
+.modal-btn-confirm{color:#1a0e06}
+/* chip de tempo das linhas de drenagem/servir (setup e construtor): o muted
+   sobre o fundo do chip rendia 3,91:1 */
+.pour-time.drain{color:var(--text-dim)}
+
+/* ── lista: seção "Minhas receitas" ── */
+.mine-group{margin-bottom:26px}
+.extras-header.is-mine .eh-t{color:var(--text-dim)}
+.recipe-card.mine{border-left:4px solid var(--teal-deep)}
+.create-card{display:flex;align-items:center;gap:13px;width:100%;min-height:64px;text-align:left;
+padding:12px 15px;margin-bottom:9px;border-radius:14px;cursor:pointer;font-family:inherit;color:inherit;
+background:transparent;border:2px dashed rgba(42,157,143,.55);
+transition:transform .16s var(--ease),background .16s var(--ease),border-color .16s var(--ease)}
+.create-card:active{transform:scale(.982);background:var(--green-bg);border-color:var(--green)}
+.cc-plus{flex-shrink:0;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+justify-content:center;background:var(--green-bg);border:2px solid var(--green);color:var(--green);
+font-size:22px;font-weight:700;line-height:1}
+.cc-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cc-t{font-size:15px;font-weight:800;color:var(--green);letter-spacing:-.2px}
+.cc-s{font-size:11.5px;font-weight:600;color:var(--text-dim);line-height:1.4}
+
+/* ── setup: editar a receita do usuário ── */
+.nav-edit{font-size:19px}
+.nav-edit[hidden]{display:none}
+/* Nome sem espaços ("Etiopia_Guji_Natural_V60…") empurrava o ✎ para fora da
+   tela — e ele é o único caminho para editar ou excluir. Título encolhe e quebra
+   em qualquer ponto; nota, modal e tela final também. Texto com espaços (todas
+   as receitas do app) quebra exatamente como antes. */
+.s2-title{min-width:0;overflow-wrap:anywhere}
+.rn-text,.modal-text,.finish-sub{overflow-wrap:anywhere}
+
+/* ── construtor: resumo fixo sob a nav ── */
+#s-builder .s2-body{padding-top:16px}
+.bld-sum{flex-shrink:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;
+padding:10px 20px 11px;border-bottom:1px solid var(--border)}
+.bs-cell{position:relative;background:var(--bg);border:1.5px solid var(--border);border-radius:11px;
+padding:7px 3px 8px;text-align:center;min-width:0;
+transition:border-color .2s var(--ease),background .2s var(--ease)}
+.bs-l{display:block;font-size:9px;font-weight:800;color:var(--text-dim);text-transform:uppercase;
+letter-spacing:.8px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-v{display:block;font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;
+color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.15}
+.bs-v small{font-size:10px;font-weight:700;color:var(--text-dim);margin-left:2px}
+/* tempo do plano: mesma régua e mesmas cores do #time-box do setup */
+#bs-time-cell[data-tstate="over"]{border-color:var(--yellow);background:var(--yellow-bg)}
+#bs-time-cell[data-tstate="over"] .bs-v{color:var(--yellow)}
+#bs-time-cell[data-tstate="risk"]{border-color:var(--red);background:var(--red-bg)}
+#bs-time-cell[data-tstate="risk"] .bs-v{color:var(--red)}
+/* proporção fora de 1:10–1:22: é o que bloqueia o salvar */
+#bs-ratio-cell[data-bad="1"]{border-color:var(--red);background:var(--red-bg)}
+#bs-ratio-cell[data-bad="1"] .bs-v{color:var(--red)}
+/* sinal que não depende de cor: selo "!" no canto da célula (fora da área do
+   valor — um "⚠ " na frente de 1:22,5 estourava a célula em 320–390px) */
+#bs-time-cell[data-tstate="over"]::after,#bs-time-cell[data-tstate="risk"]::after,
+#bs-ratio-cell[data-bad="1"]::after{content:'!';position:absolute;top:-7px;right:-5px;
+width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+font-family:'Inter',sans-serif;font-size:11px;font-weight:900;line-height:1;
+box-shadow:0 0 0 2px var(--bg)}
+#bs-time-cell[data-tstate="over"]::after{background:var(--yellow);color:#1a1200}
+#bs-time-cell[data-tstate="risk"]::after,#bs-ratio-cell[data-bad="1"]::after{background:var(--red);color:#1a0e06}
+.bld-msg{flex-shrink:0;padding:9px 20px;font-size:12.5px;font-weight:700;line-height:1.45;
+color:var(--red);background:var(--red-bg);border-bottom:2px solid var(--red)}
+.bld-msg[hidden]{display:none}
+.bld-msg.pulse{animation:bldPulse .45s var(--ease) 2}
+@keyframes bldPulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── construtor: cartões e campos ── */
+.bld-card{background:linear-gradient(160deg,var(--surface-2),var(--surface));border:2px solid var(--border);
+border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:var(--sh-sm)}
+.bld-card .pours-title{margin-bottom:12px}
+.fld-l{display:block;font-size:10px;font-weight:800;color:var(--text-dim);text-transform:uppercase;
+letter-spacing:.9px;margin:0 0 6px}
+/* unidade e "(opcional)": caixa própria — "ml", "°C" e "s" não viram maiúsculas */
+.fld-l .fld-u{font-weight:700;text-transform:none;letter-spacing:0;white-space:nowrap}
+.bld-in+.fld-l,.tscale-row+.fld-l{margin-top:14px}
+#bld-base{margin-top:14px}
+.bld-in{display:block;width:100%;height:46px;padding:0 14px;background:var(--bg);
+border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;
+font-size:16px;font-weight:600;transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
+.bld-in::placeholder{color:var(--text-muted);font-weight:500}
+.bld-in:focus{outline:none;border-color:var(--green);box-shadow:var(--glow-green)}
+textarea.bld-in{height:auto;min-height:80px;padding:11px 14px;line-height:1.45;resize:vertical}
+/* 2 colunas de 360px para cima, 1 em 320px, 3–4 em tela larga — sem media
+   query. auto-fill (não auto-fit): um campo sozinho na linha mantém a largura
+   da coluna, então todo stepper do construtor tem o mesmo tamanho. Rótulos que
+   quebram em 2 linhas não desalinham: cada campo encosta o controle na base. */
+.bld-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.fld{min-width:0;display:flex;flex-direction:column;justify-content:flex-end}
+
+/* ── stepper compacto: [−| valor unidade |+], 44px de alvo em cada botão ── */
+/* 47px = 44px de área útil + as bordas: os botões e o campo têm 44 de altura */
+.stp{display:flex;align-items:stretch;height:47px;max-width:240px;background:var(--bg);
+border:1.5px solid var(--border);border-radius:12px;overflow:hidden;
+transition:border-color .18s var(--ease),box-shadow .18s var(--ease)}
+.stp:focus-within{border-color:var(--green);box-shadow:var(--glow-green)}
+.stp-b{flex:0 0 44px;width:44px;background:transparent;border:none;color:var(--green);
+font-family:inherit;font-size:22px;font-weight:700;line-height:1;cursor:pointer;
+display:flex;align-items:center;justify-content:center;
+transition:background .12s var(--ease),color .12s var(--ease)}
+.stp-b:active{background:var(--green);color:var(--bg)}
+.stp-b:focus-visible{outline-offset:-3px}
+.stp-b[aria-disabled="true"]{color:var(--text-muted);opacity:.4;cursor:default}
+.stp-b[aria-disabled="true"]:active{background:transparent;color:var(--text-muted)}
+/* a unidade mora no rótulo do campo ("Água · ml"): dentro da caixa, "240 ml"
+   não cabia a 16px (tamanho mínimo para o iOS não dar zoom ao focar) */
+/* divisórias desenhadas por sombra, não por borda: não comem largura do campo
+   (em 360px o número tem exatamente 44px) */
+.stp-box{flex:1;min-width:0;display:flex;align-items:stretch;justify-content:center;
+box-shadow:inset 1px 0 0 var(--border),inset -1px 0 0 var(--border)}
+/* o campo ocupa a altura toda da caixa: tocar acima ou abaixo do número também foca */
+.stp-in{width:100%;height:100%;min-width:0;background:transparent;border:none;color:var(--text);
+font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;text-align:center;padding:0;
+font-variant-numeric:tabular-nums}
+.stp-in:focus{outline:none}
+/* temperatura de um despejo fora da base: mesma família do "valor alterado" da proporção */
+.stp.dev .stp-in{color:var(--terra-text)}
+
+/* ── linha de despejo: separadores como os da tabela do setup, sem cartão
+   dentro de cartão (a moldura aninhada comia 27px de cada linha) ── */
+.bld-pour{padding:8px 0 14px;border-top:1px solid var(--border)}
+#bld-pours>:first-child{border-top:none;padding-top:0}
+.bp-head{display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:4px}
+.bp-head .pour-time,.bld-serve .pour-time{flex:0 0 48px}
+.bp-name{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.bp-l{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.2px;
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bp-acc{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;color:var(--text-dim)}
+.bp-rm{flex:0 0 44px;width:44px;height:44px;margin-right:-10px;border:none;border-radius:11px;
+background:transparent;color:var(--text-dim);font-family:inherit;font-size:17px;cursor:pointer;
+display:flex;align-items:center;justify-content:center}
+.bp-rm:active{background:var(--red);color:#1a0e06}
+.bp-rm[aria-disabled="true"]{opacity:.3;cursor:default}
+.bp-rm[aria-disabled="true"]:active{background:transparent;color:var(--text-dim)}
+.bld-pour.is-drain{border-top-style:dashed;padding-top:10px}
+.bld-serve{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 0 0;
+border-top:1px solid var(--border)}
+.bld-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;
+margin:4px 0 14px;border-radius:13px;border:2px dashed rgba(42,157,143,.55);background:transparent;
+color:var(--green);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;
+transition:background .15s var(--ease)}
+.bld-add:active{background:var(--green-bg)}
+.bld-add[aria-disabled="true"]{border-color:var(--border);color:var(--text-dim);cursor:default}
+.bld-add[aria-disabled="true"]:active{background:transparent}
+.bld-undo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;
+padding:6px 6px 6px 14px;border-radius:14px;border:1.5px dashed var(--border);
+font-size:13px;font-weight:700;color:var(--text-dim)}
+.bld-undo-btn{flex-shrink:0;min-height:44px;padding:0 14px;border-radius:11px;cursor:pointer;
+font-family:inherit;font-size:13px;font-weight:800;color:var(--green);background:transparent;
+border:1.5px solid var(--green)}
+.bld-undo-btn:active{background:var(--green);color:var(--bg)}
+.bld-del{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;
+border-radius:13px;border:2px solid var(--border);background:transparent;
+color:var(--text-dim);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.bld-del:active{background:var(--red);border-color:var(--red);color:#1a0e06}
+.bld-del[hidden]{display:none}
+.bld-spacer{height:calc(110px + env(safe-area-inset-bottom))}
+/* inválido: cor sólida, nunca opacidade — o botão é fixo e, translúcido, deixava
+   o conteúdo rolado aparecer através dele */
+.start-btn.is-invalid{background:var(--surface-2);color:var(--text-dim);box-shadow:none;
+border:2px solid var(--border)}
+
+@media (min-width:600px){
+.bld-sum,.bld-msg{padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px))}
+}
+@media (max-width:380px){
+.bs-l{font-size:8.5px;letter-spacing:.3px}
+.bs-v{font-size:15px}
+.bld-card{padding:15px}
+}
+/* 320px: "PROPORÇÃO" só cabe inteira sem espaçamento entre letras */
+@media (max-width:340px){
+.bld-sum{gap:5px}
+.bs-cell{padding-left:2px;padding-right:2px}
+.bs-l{letter-spacing:0}
+}
+@media (orientation:landscape) and (max-height:520px){
+#s-builder .s2-nav{padding-top:max(8px,env(safe-area-inset-top));padding-bottom:8px}
+.bld-sum{padding-top:6px;padding-bottom:6px}
+.bs-cell{padding:4px 4px 5px}
+.bs-l{margin-bottom:1px}
+.bs-v{font-size:14px}
+#bld-save{height:50px;bottom:max(10px,env(safe-area-inset-bottom))}
+#s-builder .bld-spacer{height:calc(76px + env(safe-area-inset-bottom))}
+}
 </style>
 </head>
 <body>
@@ -1015,6 +1224,19 @@ line-height:1.35;margin-bottom:3px}
 <div class="modal-text">No Safari, toque em <strong>Compartilhar</strong> (ícone <span aria-hidden="true">⎙</span>) e escolha <strong>"Adicionar à Tela de Início"</strong>. O app abre em tela cheia, com a logo e sem barra de endereço.</div>
 <div class="modal-actions">
 <button class="modal-btn modal-btn-cancel" onclick="closeIosModal()">Entendi</button>
+</div>
+</div>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO GENÉRICA (construtor: excluir receita / descartar alterações) -->
+<div class="modal-overlay" id="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-text" aria-hidden="true">
+<div class="modal-card">
+<div class="modal-icon" id="confirm-icon" aria-hidden="true">?</div>
+<div class="modal-title" id="confirm-title"></div>
+<div class="modal-text" id="confirm-text"></div>
+<div class="modal-actions">
+<button class="modal-btn modal-btn-cancel" id="confirm-cancel" type="button" onclick="closeConfirm(true)">Cancelar</button>
+<button class="modal-btn modal-btn-confirm" id="confirm-ok" type="button" onclick="confirmOk()">Confirmar</button>
 </div>
 </div>
 </div>
@@ -1063,12 +1285,13 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 <nav class="s2-nav" aria-label="Navegação">
 <button class="back-btn" onclick="goBack()" aria-label="Voltar">←</button>
 <h2 class="s2-title" id="s2-title">Setup</h2>
-<div style="width:48px" aria-hidden="true"></div>
+<button class="back-btn nav-edit" id="setup-edit" type="button" hidden onclick="editCurrentCustom()" aria-label="Editar esta receita">✎</button>
+<div id="setup-spacer" style="width:48px" aria-hidden="true"></div>
 </nav>
 <div class="s2-body">
 <div class="setup-memory" id="setup-memory" aria-live="polite"></div>
 <div class="recipe-note" id="recipe-note" hidden>
-<span class="rn-label">Sobre a receita</span>
+<span class="rn-label" id="recipe-note-label">Sobre a receita</span>
 <span class="rn-text" id="recipe-note-text"></span>
 </div>
 <div class="dose-section">
@@ -1131,6 +1354,63 @@ aria-labelledby="tscale-label" onclick="toggleTimeScale()"><span class="ts-track
 </div>
 </div>
 <button class="start-btn" onclick="beginCountdown()">Iniciar Timer</button>
+</section>
+
+<!-- SCREEN: CONSTRUTOR DE RECEITAS -->
+<section id="s-builder" class="screen" aria-labelledby="bld-title">
+<nav class="s2-nav" aria-label="Navegação">
+<button class="back-btn" type="button" onclick="builderBack()" aria-label="Voltar">←</button>
+<h2 class="s2-title" id="bld-title">Nova receita</h2>
+<div style="width:48px" aria-hidden="true"></div>
+</nav>
+<div class="bld-sum" role="group" aria-label="Resumo da receita">
+<div class="bs-cell"><span class="bs-l">Água</span><span class="bs-v" id="bs-water">0</span></div>
+<div class="bs-cell" id="bs-ratio-cell" data-bad="0"><span class="bs-l">Proporção</span><span class="bs-v" id="bs-ratio">—</span><span class="sr-only" id="bs-ratio-sr"></span></div>
+<div class="bs-cell" id="bs-time-cell" data-tstate="ok"><span class="bs-l">Tempo</span><span class="bs-v" id="bs-time">—</span><span class="sr-only" id="bs-time-sr"></span></div>
+<div class="bs-cell"><span class="bs-l">Despejos</span><span class="bs-v" id="bs-pours">—</span></div>
+</div>
+<div class="bld-msg" id="bld-msg" role="status" aria-live="polite" hidden></div>
+<div class="s2-body" id="bld-body">
+<div class="bld-card">
+<h3 class="pours-title"><span>Receita</span></h3>
+<label class="fld-l" for="bld-name">Nome</label>
+<input class="bld-in" id="bld-name" type="text" maxlength="40" autocomplete="off" autocapitalize="sentences" enterkeyhint="done" oninput="bldText('name',this.value)">
+<label class="fld-l" for="bld-dripper">Dripper</label>
+<input class="bld-in" id="bld-dripper" type="text" maxlength="24" autocomplete="off" list="bld-drippers" enterkeyhint="done" oninput="bldText('dripper',this.value)">
+<datalist id="bld-drippers"><option value="V60"></option><option value="V60-03"></option><option value="Origami"></option><option value="OREA V4"></option><option value="Kalita Wave"></option><option value="Chemex"></option><option value="April"></option><option value="Clever"></option></datalist>
+<div class="bld-fields" id="bld-base"></div>
+<div class="tscale-row bld-vary">
+<button class="tscale-sw" id="bld-vary" type="button" role="switch" aria-checked="false" aria-labelledby="bld-vary-l" aria-describedby="bld-vary-d" onclick="toggleVary()"><span class="ts-track"><span class="ts-knob"></span></span></button>
+<span class="ts-body">
+<span class="ts-label" id="bld-vary-l">Temperatura por despejo</span>
+<span class="ts-detail" id="bld-vary-d"></span>
+</span>
+</div>
+<label class="fld-l" for="bld-notes">Notas <span class="fld-u">(opcional)</span></label>
+<textarea class="bld-in" id="bld-notes" maxlength="280" rows="3" placeholder="Moagem, filtro, técnica de despejo…" oninput="bldText('notes',this.value)"></textarea>
+</div>
+<div class="bld-card">
+<h3 class="pours-title"><span>Despejos</span><span class="pt-n" id="bld-count"></span></h3>
+<div class="timeline" id="bld-timeline" aria-hidden="true"></div>
+<div class="tl-axis" id="bld-axis" aria-hidden="true"></div>
+<div id="bld-pours"></div>
+<button class="bld-add" id="bld-add" type="button" onclick="addPour()">+ Adicionar despejo</button>
+<div class="bld-pour is-drain" role="group" aria-labelledby="bd-l">
+<div class="bp-head">
+<span class="pour-time drain" id="bd-t">0:00</span>
+<span class="bp-name"><span class="bp-l" id="bd-l">⬇ Drenagem final</span><span class="bp-acc">0 s = sem etapa de drenagem</span></span>
+</div>
+<div class="bld-fields" id="bld-drain-f"></div>
+</div>
+<div class="bld-serve">
+<span class="pour-time drain" id="bsv-t">0:00</span>
+<span class="bp-name"><span class="bp-l">✓ Servir</span><span class="bp-acc">fim do plano · tempo total</span></span>
+</div>
+</div>
+<button class="bld-del" id="bld-del" type="button" hidden onclick="deleteBuilderRecipe()"><span aria-hidden="true">🗑</span> Excluir receita</button>
+<div class="bld-spacer" aria-hidden="true"></div>
+</div>
+<button class="start-btn" id="bld-save" type="button" onclick="saveBuilder()">Salvar receita</button>
 </section>
 
 <!-- SCREEN 3: BREW -->
@@ -1575,8 +1855,14 @@ const accumulatedAt=idx=>accumCache[idx]||0;
    Loop de atrito-zero: salvar em 1 toque → avaliar em 2 eixos → coaching → memória por receita
    ═══════════════════════════════════════════ */
 const STORE_KEY='wbrc_v1';
-function loadStore(){try{return JSON.parse(localStorage.getItem(STORE_KEY))||{};}catch(e){return{};}}
-function saveStore(s){try{localStorage.setItem(STORE_KEY,JSON.stringify(s));}catch(e){}}
+/* A raiz precisa ser um objeto: um valor primitivo gravado ali ("42") fazia
+   toda escrita posterior virar no-op silencioso — e uma receita criada pelo
+   usuário se perderia sem aviso. */
+function loadStore(){try{const v=JSON.parse(localStorage.getItem(STORE_KEY));return(v&&typeof v==='object'&&!Array.isArray(v))?v:{};}catch(e){return{};}}
+/* trySaveStore informa se gravou: o construtor precisa saber (aba anônima,
+   cota cheia). saveStore mantém o contrato antigo de falhar em silêncio. */
+function trySaveStore(s){try{localStorage.setItem(STORE_KEY,JSON.stringify(s));return true;}catch(e){return false;}}
+function saveStore(s){trySaveStore(s);}
 const recipeKey=()=>R?(R.key||R.id):null;
 
 /* Coaching determinístico — azedo/amargo = extração (moagem/temp); fraco/forte = concentração (dose/água).
@@ -1703,7 +1989,7 @@ const recs=loadStore().recipes||{};
 const rec=recs[recipeKey()];
 if(rec&&rec.acid!=null&&rec.strength!=null){
 const rl=(typeof rec.ratio==='number'&&isFinite(rec.ratio))?' · '+ratioLabel(rec.ratio):'';
-el.innerHTML=`<span class="sm-label">↻ Da última vez (${fmtDose(rec.dose)}${rl})</span><span class="sm-tip">${rec.tip}</span>`;
+el.innerHTML=`<span class="sm-label">↻ Da última vez (${fmtDose(rec.dose)}${rl})</span><span class="sm-tip">${esc(rec.tip)}</span>`;
 el.classList.add('show');
 }else if(rec&&rec.dose){
 el.innerHTML=`<span class="sm-label">↻ Última vez</span><span class="sm-tip">você usou ${fmtDose(rec.dose)} nesta receita.</span>`;
@@ -1801,14 +2087,14 @@ if(!m)return'';
 /* o card descreve a receita no PONTO DE PROJETO; sem declarar a dose, o tempo
    aqui contradizia o da tela de setup quando a dose era outra */
 return (m.designDose?`<span class="rc-tag">⚖ <b>${String(m.designDose).replace('.',',')} g</b></span>`:'')+
-`<span class="rc-tag">💧 <b>${m.pours}</b> despejos</span>`+
+`<span class="rc-tag">💧 <b>${m.pours}</b> despejo${m.pours===1?'':'s'}</span>`+
 `<span class="rc-tag">⏱ <b>${fmtShort(m.total)}</b></span>`+
 `<span class="rc-tag">🌡 <b>${m.temp}</b></span>`;}
 function metaSpoken(m){
 if(!m)return'';
 const min=Math.floor(m.total/60),sec=m.total%60;
 const t=sec?`${min} minuto${min===1?'':'s'} e ${sec} segundos`:`${min} minuto${min===1?'':'s'}`;
-return `${m.designDose?'receita para '+String(m.designDose).replace('.',',')+' gramas, ':''}${m.pours} despejos, ${t}, ${m.temp}.`;}
+return `${m.designDose?'receita para '+String(m.designDose).replace('.',',')+' gramas, ':''}${m.pours} despejo${m.pours===1?'':'s'}, ${t}, ${m.temp}.`;}
 
 /* ═══════════════════════════════════════════
    BUILD RECIPE LIST (extras + anos, com busca/filtro)
@@ -1816,8 +2102,28 @@ return `${m.designDose?'receita para '+String(m.designDose).replace('.',',')+' g
 function buildList(){
 const extras=EXTRAS.filter(e=>matchesFilter(e,true)&&matchesSearch(e));
 const recipes=RECIPES.filter(r=>matchesFilter(r,false)&&matchesSearch(r));
+/* receitas do usuário: a editada por último primeiro. Não são "Extras", mas
+   entram nos filtros de dripper e na busca como qualquer outra. */
+const mine=loadCustoms().sort((a,b)=>(b.updated||0)-(a.updated||0)).map(customToRecipe)
+.filter(r=>matchesFilter(r,false)&&matchesSearch(r));
+/* o convite para criar só aparece na lista completa — com busca ou filtro
+   ativos ele seria ruído no meio de um resultado */
+const showCreate=filterMode==='all'&&!searchQ;
 const placeName={1:'1º lugar',2:'2º lugar',3:'3º lugar'};
 let html='';
+
+if(mine.length||showCreate){
+html+=`<section class="mine-group" aria-labelledby="mine-h">
+<div class="extras-header is-mine"><span class="eh-ic" aria-hidden="true">📝</span>
+<h2 class="eh-t" id="mine-h">Minhas receitas</h2></div>
+${mine.map(customCardHTML).join('')}
+${showCreate?`<button type="button" class="create-card" onclick="openBuilder(null,'s-select')">
+<span class="cc-plus" aria-hidden="true">+</span>
+<span class="cc-body"><span class="cc-t">Criar receita</span>
+<span class="cc-s">Água, tempo e temperatura de cada despejo</span></span>
+</button>`:''}
+</section>`;
+}
 
 if(extras.length){
 html+=`<section class="extras-group" aria-labelledby="extras-h">
@@ -1882,14 +2188,14 @@ aria-label="${placeName[r.place]}, ${year}: ${r.champion}, ${r.country}. ${r.dri
 }).join('')}
 </section>`).join('');
 
-if(!extras.length&&!recipes.length){
+if(!mine.length&&!extras.length&&!recipes.length){
 html=`<div class="empty-state" role="status">
 <div class="es-ic" aria-hidden="true">☕</div>
 <div class="es-t">Nenhuma receita encontrada</div>
 <div class="es-s">Tente outro termo ou volte para o filtro <strong>Todas</strong>.</div></div>`;
 }
 document.getElementById('recipe-list').innerHTML=html;
-const n=extras.length+recipes.length;
+const n=mine.length+extras.length+recipes.length;
 const hc=document.getElementById('head-count-n');if(hc)hc.textContent=n;
 }
 
@@ -1965,21 +2271,24 @@ const STEP_ICON={wait:'⏱',drain:'⬇',serve:'✓'};
 
 /* Linha do tempo proporcional ao tempo: comunica a cadência da receita
    (4:6 despeja a cada 45 s; a de 10 despejos, a cada 15 s) */
-function renderTimeline(){
-const el=document.getElementById('pour-timeline'),ax=document.getElementById('pour-axis');
-if(!el||!ax)return;
-const steps=R.steps,total=steps[steps.length-1].atSec||1;
-let html='';
+function timelineHTML(steps,labelAt){
+const total=steps[steps.length-1].atSec||1;
+let bar='';
 for(let i=0;i<steps.length-1;i++){
 const st=steps[i],w=(steps[i+1].atSec-st.atSec)/total*100;
 const isPour=st.type==='pour';
 /* limiar proporcional ao nº de dígitos: com 6,5% fixo, a kasuya10 a 5 g escondia
    9 dos 10 rótulos e a soma visível virava 8 de 75 ml */
-const lbl=isPour?String(pourDispAt(i)):'';
-html+=`<div class="tl-seg${isPour?'':' tl-drain'}" style="width:${w.toFixed(2)}%">${(lbl&&w>2.2*lbl.length+1)?lbl:''}</div>`;
+const lbl=isPour?String(labelAt(i)):'';
+bar+=`<div class="tl-seg${isPour?'':' tl-drain'}" style="width:${w.toFixed(2)}%">${(lbl&&w>2.2*lbl.length+1)?lbl:''}</div>`;
 }
-el.innerHTML=html;
-ax.innerHTML=`<span>0:00</span><span>${fmtShort(total/2)}</span><span>${fmtShort(total)}</span>`;
+return{bar,axis:`<span>0:00</span><span>${fmtShort(total/2)}</span><span>${fmtShort(total)}</span>`};
+}
+function renderTimeline(){
+const el=document.getElementById('pour-timeline'),ax=document.getElementById('pour-axis');
+if(!el||!ax)return;
+const t=timelineHTML(R.steps,pourDispAt);
+el.innerHTML=t.bar;ax.innerHTML=t.axis;
 }
 
 function renderDosePresets(){
@@ -2068,7 +2377,11 @@ row.hidden=false;
 document.getElementById('tscale-sw').setAttribute('aria-checked',String(timeScaleOn));
 const orig=R.baseSteps[R.baseSteps.length-1].atSec;
 const now=R.steps[R.steps.length-1].atSec;
-document.getElementById('tscale-detail').innerHTML=timeScaleOn
+/* receita de um despejo só e sem drenagem: não há etapa depois do bloom para
+   deslocar — dizer "tudo desloca: 2:30 → 2:30" se contradizia */
+document.getElementById('tscale-detail').innerHTML=timeScaleOn&&orig===now
+?`Receita desenhada para ${fmtDose(R.designDose)}. Não há etapa depois do bloom para deslocar: os tempos ficam em <b>${fmtShort(orig)}</b>.`
+:timeScaleOn
 ?`Receita desenhada para ${fmtDose(R.designDose)}. Depois do bloom, tudo desloca: <b>${fmtShort(orig)} → ${fmtShort(now)}</b>. Assume o mesmo dripper.${scaleIsClamped()?' <b>Dose fora da faixa validada do modelo</b> — o fator foi limitado.':''}`
 :`Receita desenhada para ${fmtDose(R.designDose)}. Usando os tempos originais (<b>${fmtShort(orig)}</b>) em ${fmtDose(dose)}.`;
 }
@@ -2097,7 +2410,7 @@ if(lvRisk)m.push(item('Moa 2–3 clicks mais grosso',
 else if(total>CEIL_SEC)m.push(item('Considere moer 1–2 clicks mais grosso',
 `${fmtShort(total)} projetado passa do teto de 3:30 que nenhuma receita do app ultrapassa no seu ponto de projeto.`));
 if(designWater&&water>designWater*1.35)m.push(item('Suba de dripper — V60-03, Chemex ou equivalente',
-`${rnd(water)} ml no cone, ${Math.round((water/designWater-1)*100)}% acima dos ${rnd(designWater)} ml de projeto do ${R.dripperShort||R.dripper}. A geometria da cama é o que governa o escoamento.`));
+`${rnd(water)} ml no cone, ${Math.round((water/designWater-1)*100)}% acima dos ${rnd(designWater)} ml de projeto do ${esc(R.dripperShort||R.dripper)}. A geometria da cama é o que governa o escoamento.`));
 if(!m.length){el.hidden=true;return;}
 document.getElementById('brew-warn-text').innerHTML=m.join('');
 el.classList.toggle('lv-risk',lvRisk);
@@ -2145,10 +2458,15 @@ document.getElementById('time-val').textContent=fmtShort(last.atSec);
    (o preparo está passando do plano?). Compartilham as constantes 3:30 e 4:00,
    não o referencial: aqui compara-se o plano com o teto do corpus. */
 const tbox=document.getElementById('time-box');
-if(tbox)tbox.setAttribute('data-tstate',last.atSec>=RISK_SEC?'risk':last.atSec>CEIL_SEC?'over':'ok');
+if(tbox)tbox.setAttribute('data-tstate',planLevel(last.atSec));
 const pours=R.steps.filter(s=>s.type==='pour');
 document.getElementById('pours-count').textContent=`${pours.length} despejo${pours.length>1?'s':''} · ${ratioLabel(R.ratio)}`;
 
+/* receita do usuário: botão Editar no lugar do espaçador, e a nota é dele */
+const ed=document.getElementById('setup-edit'),sp=document.getElementById('setup-spacer');
+if(ed){ed.hidden=!R.isCustom;if(sp)sp.hidden=!!R.isCustom;}
+const nl=document.getElementById('recipe-note-label');
+if(nl)nl.textContent=R.isCustom?'Suas notas':'Sobre a receita';
 /* nota descritiva (só aparece quando a receita traz uma) */
 const note=document.getElementById('recipe-note');
 if(note){
@@ -2330,6 +2648,9 @@ function togglePause(){paused?resumeBrew():pauseBrew();}
 const CEIL_SEC=210;    // 3:30 · teto do corpus no ponto de projeto
 const OVERTIME_CAP=120; // s · prorrogação máxima antes de encerrar sozinho
 const RISK_SEC=240;    // 4:00 · risco de amargor
+/* Régua do PLANO: compara um cronograma com o teto do corpus. Uma só função
+   para o setup (#time-box) e o construtor (#bs-time-cell). */
+function planLevel(sec){return sec>=RISK_SEC?'risk':sec>CEIL_SEC?'over':'ok';}
 let riskAnnounced=false, frozenState=null, lastTickEl=0, gapShown=false;
 
 const targetSec=()=>R&&R.steps?R.steps[R.steps.length-1].atSec:0;
@@ -2600,7 +2921,9 @@ ft.textContent=fmtMs(finalMs!=null?finalMs:(Date.now()-t0));
 ft.setAttribute('data-tstate',frozenState||'ok');   // mesma verdade do chip abaixo
 const alvo=targetSec(),real=Math.floor((finalMs!=null?finalMs:0)/1000);
 const dif=real-alvo;
-document.getElementById('finish-sub').innerHTML=(R.isExtra
+document.getElementById('finish-sub').innerHTML=(R.isCustom
+?`📝 ${esc(R.title)}<br>${esc(R.dripper)}`
+:R.isExtra
 ?`✨ ${R.title} · ${R.champion}<br>${R.dripper}`
 :`${medals[R.place]||''} ${R.champion} · ${R.year}<br>${R.dripper}`)
 +`<br><span class="fin-cmp" data-tstate="${frozenState||'ok'}">alvo ${fmtShort(alvo)} · ${dif===0?'no alvo':(dif>0?'+':'−')+fmtShort(Math.abs(dif))}</span>`
@@ -2641,6 +2964,589 @@ wakeLockOn();          // M4: reset volta ao setup (fluxo ativo) → tela perman
 show('s-setup');
 }
 
+/* ═══════════════════════════════════════════════════════════
+   v6 · CONSTRUTOR DE RECEITAS ("Minhas receitas")
+
+   O barista monta a própria receita: nome, dripper, dose, temperatura e, para
+   cada despejo, a água (ml) e o tempo até o passo seguinte. O construtor NÃO
+   tem motor próprio: a receita salva é convertida (customToRecipe) para o mesmo
+   formato das receitas de competição — frações de um total, proporção, dose de
+   projeto, passos com atSec — e daí em diante passa pelas funções de sempre:
+   escala de tempo por dose, ajuste fino da proporção, arredondamento
+   cumulativo, escada de estados, prorrogação, registro e avaliação.
+
+   Modelo de edição: INTERVALOS, não instantes. Cada despejo guarda o tempo até
+   o passo seguinte; o instante de cada um é derivado (o chip à esquerda). Esticar
+   o bloom empurra tudo o que vem depois — é o que acontece na bancada — e a ordem
+   dos passos nunca pode ficar inválida.
+
+   Dependências funcionais (declaradas, não silenciosas):
+     · nova chave wbrc_v1.custom — a lista de receitas do usuário; gravar e
+       excluir mexem só no item em questão;
+     · salvar uma edição que muda o que se PREPARA (dose, temperaturas, água,
+       intervalos, drenagem) apaga a memória daquela receita (wbrc_v1.recipes
+       ['custom_<id>']): dose e proporção lembradas eram da versão anterior, e
+       restoreDose() as aplicaria por cima da nova. Nome, dripper e notas não;
+     · proporção fora de 1:10–1:22 bloqueia o salvar: é a faixa física que o
+       ajuste fino (ratioBounds) assume — fora dela os dois botões travariam;
+     · plano acima de 4:00 é permitido e só sinalizado (mesma régua do setup).
+   ═══════════════════════════════════════════════════════════ */
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* limites de cada campo; o passo é o do ± (digitando, qualquer inteiro da faixa) */
+const BL={dose:{min:5,max:80,step:1},temp:{min:60,max:100,step:1},
+ml:{min:5,max:600,step:5},gap:{min:10,max:300,step:5},drain:{min:0,max:300,step:5}};
+/* gap mínimo de 10 s > MIN_POUR_GAP (6 s): applyTimeScale nunca precisa
+   empurrar um despejo do usuário na dose de projeto */
+const BK={dose:'dose',temp:'temp',ptemp:'temp',ml:'ml',gap:'gap',drain:'drain'};
+const UNIT={dose:'g',temp:'°C',ptemp:'°C',ml:'ml',gap:'s',drain:'s'};
+const UNIT_SPOKEN={dose:'gramas',temp:'graus Celsius',ptemp:'graus Celsius',ml:'mililitros',gap:'segundos',drain:'segundos'};
+const MAX_POURS=15,NAME_MAX=40,DRIPPER_MAX=24,NOTES_MAX=280;
+const clampTo=(k,v)=>Math.min(BL[k].max,Math.max(BL[k].min,Math.round(v)));
+const pourLabel=(i,n)=>n===1?'Despejo único':i===0?'Bloom':`${i+1}º Despejo`;
+const sumMl=pours=>pours.reduce((a,p)=>a+p.ml,0);
+
+/* ── armazenamento ── o que vem do localStorage é entrada externa: revalida tudo */
+function sanitizeCustom(c){
+if(!c||typeof c!=='object')return null;
+if(typeof c.id!=='string'||!/^[a-z0-9]{4,24}$/i.test(c.id))return null;
+const num=v=>(v==null||v==='')?NaN:Number(v);
+const dose=num(c.dose),temp=num(c.temp);
+if(!isFinite(dose)||!isFinite(temp)||!Array.isArray(c.pours))return null;
+const T=clampTo('temp',temp);
+const pours=c.pours.slice(0,MAX_POURS)
+.filter(p=>p&&typeof p==='object'&&isFinite(num(p.ml))&&isFinite(num(p.gap)))
+.map(p=>({ml:clampTo('ml',num(p.ml)),temp:isFinite(num(p.temp))?clampTo('temp',num(p.temp)):T,gap:clampTo('gap',num(p.gap))}));
+if(!pours.length)return null;
+const drain=num(c.drain),cr=num(c.created),up=num(c.updated);
+const o={id:c.id,name:String(c.name==null?'':c.name).trim().slice(0,NAME_MAX)||'Receita sem nome',
+dripper:String(c.dripper==null?'':c.dripper).trim().slice(0,DRIPPER_MAX),
+dose:clampTo('dose',dose),temp:T,vary:c.vary===true,
+notes:String(c.notes==null?'':c.notes).trim().slice(0,NOTES_MAX),
+pours,drain:isFinite(drain)?clampTo('drain',drain):0,
+created:isFinite(cr)?cr:0,updated:isFinite(up)?up:0};
+/* a mesma faixa que o construtor exige para salvar */
+const r=sumMl(o.pours)/o.dose;
+if(r<RATIO_MIN-1e-9||r>RATIO_MAX+1e-9)return null;
+return o;
+}
+function loadCustoms(){
+const a=loadStore().custom;
+if(!Array.isArray(a))return[];
+const seen=new Set();
+return a.map(sanitizeCustom).filter(c=>c&&!seen.has(c.id)&&seen.add(c.id));
+}
+/* Gravação cirúrgica: só o item salvo ou excluído muda. Reescrever a lista já
+   filtrada por sanitizeCustom apagaria em silêncio o que esta versão não
+   entende (ex.: uma receita gravada por uma versão futura com 16 despejos). */
+const rawCustoms=s=>Array.isArray(s.custom)?s.custom.slice():[];
+function saveCustom(rec,forgetKey){
+const s=loadStore(),a=rawCustoms(s);
+const k=a.findIndex(c=>c&&c.id===rec.id);
+if(k>=0)a[k]=rec;else a.push(rec);
+s.custom=a;
+if(forgetKey&&s.recipes&&typeof s.recipes==='object')delete s.recipes[forgetKey];
+return trySaveStore(s);
+}
+function deleteCustom(id){
+const s=loadStore();
+s.custom=rawCustoms(s).filter(c=>!(c&&c.id===id));
+if(s.recipes&&typeof s.recipes==='object')delete s.recipes['custom_'+id];
+return trySaveStore(s);
+}
+
+/* ── conversão para o formato do motor ── fonte única da prévia e do timer */
+function customSteps(c){
+const n=c.pours.length,total=sumMl(c.pours)||1,steps=[];
+let t=0;
+c.pours.forEach((p,i)=>{
+steps.push({atSec:t,type:'pour',label:pourLabel(i,n),frac:p.ml/total,temp:c.vary?p.temp:c.temp});
+t+=p.gap;
+});
+if(c.drain>0){steps.push({atSec:t,type:'drain',label:'Drenagem final',dur:c.drain});t+=c.drain;}
+steps.push({atSec:t,type:'serve',label:'Servir'});
+return steps;
+}
+function customToRecipe(c){
+const dr=c.dripper||'Coado';
+return{id:'custom_'+c.id,key:'custom_'+c.id,customId:c.id,isCustom:true,
+title:c.name,champion:c.name,country:'',flag:'📝',year:new Date(c.created||Date.now()).getFullYear(),
+dripper:dr,dripperShort:dr,ratio:sumMl(c.pours)/c.dose,designDose:c.dose,defaultDose:c.dose,
+desc:c.notes||'',updated:c.updated||0,steps:customSteps(c)};
+}
+function customCardHTML(r){
+const m=recipeMeta(r);
+return `<button type="button" class="recipe-card mine" onclick="pickCustom('${r.customId}')"
+aria-label="Minha receita: ${esc(r.title)}. ${esc(r.dripper)}, proporção ${ratioLabel(r.ratio).replace(':',' para ')}. ${metaSpoken(m)}">
+<span class="rc-top">
+<span class="rc-place" aria-hidden="true">📝</span>
+<span class="rc-info">
+<span class="rc-name">${esc(r.title)}</span>
+<span class="rc-method">${esc(r.dripper)} · minha receita</span>
+</span>
+<span class="rc-ratio" aria-hidden="true">${ratioLabel(r.ratio)}</span>
+</span>
+<span class="rc-meta" aria-hidden="true">${metaTags(m)}</span>
+</button>`;
+}
+function pickCustom(id){
+const c=loadCustoms().find(x=>x.id===id);
+if(!c){buildList();show('s-select');return;}
+ensureAudio();wakeLockOn();
+R=customToRecipe(c);
+cameFromVariants=false;restoreDose();
+applyTimeScale();
+buildAccumCache();
+document.getElementById('s2-title').textContent=`📝 ${c.name}`;
+renderSetup();show('s-setup');
+}
+function editCurrentCustom(){if(R&&R.isCustom)openBuilder(R.customId,'s-setup');}
+
+/* ── estado do construtor ── (null = fechado) */
+let B=null,stpTimer=null;
+/* receita inicial: 20 g · 300 ml (1:15) · bloom de 45 s · três despejos de
+   80 ml a cada 40 s · drenagem de 45 s · pronta em 3:20. Um V60 comum, que o
+   barista ajusta em vez de montar do zero. */
+const BUILDER_NEW={dripper:'V60',dose:20,temp:93,vary:false,drain:45,notes:'',
+pours:[{ml:60,gap:45},{ml:80,gap:40},{ml:80,gap:40},{ml:80,gap:30}]};
+
+/* retrato normalizado, no formato do armazenamento (sem id/datas) */
+function builderOut(){
+return{name:B.name.trim(),dripper:B.dripper.trim(),dose:B.dose,temp:B.temp,vary:B.vary,
+notes:B.notes.trim(),drain:B.drain,
+pours:B.pours.map(p=>({ml:p.ml,temp:B.vary?p.temp:B.temp,gap:p.gap}))};
+}
+const builderDirty=()=>!!B&&JSON.stringify(builderOut())!==B.initial;
+function autoName(list){
+const names=new Set(list.map(c=>c.name));
+let n=list.length+1;
+while(names.has('Minha receita '+n))n++;
+return'Minha receita '+n;
+}
+function newCustomId(list){
+let id;
+do{id=(Date.now().toString(36)+Math.random().toString(36).slice(2,8)).slice(0,24);}
+while(list.some(c=>c.id===id));
+return id;
+}
+
+function openBuilder(id,returnTo){
+const list=loadCustoms();
+const c=id?list.find(x=>x.id===id):null;
+if(id&&!c){buildList();show('s-select');return;}
+const src=c||BUILDER_NEW;
+B={id:c?c.id:null,created:c?c.created:0,returnTo:returnTo||'s-select',
+name:c?c.name:'',dripper:src.dripper,dose:src.dose,temp:src.temp,vary:!!src.vary,
+notes:src.notes||'',drain:src.drain,
+/* own = o despejo tem temperatura própria (não acompanha a base) */
+pours:src.pours.map(p=>{const t=p.temp!=null?p.temp:src.temp;return{ml:p.ml,temp:t,gap:p.gap,own:!!src.vary&&t!==src.temp};}),
+undo:null,undoTimer:null,
+placeholder:autoName(c?list.filter(x=>x.id!==c.id):list)};
+B.initial=JSON.stringify(builderOut());
+clearTimeout(stpTimer);
+wakeLockOff();              // editar não é preparo: a tela pode apagar
+renderBuilder();
+show('s-builder');
+const body=document.getElementById('bld-body');if(body)body.scrollTop=0;
+}
+
+function renderBuilder(){
+if(!B)return;
+const $=id=>document.getElementById(id);
+$('bld-title').textContent=B.id?'Editar receita':'Nova receita';
+$('bld-save').textContent=B.id?'Salvar alterações':'Salvar receita';
+const nm=$('bld-name');nm.value=B.name;nm.placeholder=B.placeholder;
+$('bld-dripper').value=B.dripper;
+$('bld-notes').value=B.notes;
+$('bld-del').hidden=!B.id;
+$('bld-drain-f').innerHTML=fldHTML('Duração','drain',0);
+renderBase();
+renderPours();              // termina em renderBuilderLive()
+}
+function renderBase(){
+document.getElementById('bld-base').innerHTML=
+fldHTML('Dose','dose',0)+fldHTML(B.vary?'Temperatura base':'Temperatura','temp',0);
+document.getElementById('bld-vary').setAttribute('aria-checked',String(B.vary));
+document.getElementById('bld-vary-d').textContent=B.vary
+?'Cada despejo tem a sua. Mudar a base leva junto os despejos que estavam nela.'
+:'Todos os despejos usam a temperatura acima.';
+}
+
+function fldGet(k,i){
+if(k==='dose')return B.dose;
+if(k==='temp')return B.temp;
+if(k==='drain')return B.drain;
+const p=B.pours[i];
+return k==='ml'?p.ml:k==='ptemp'?p.temp:p.gap;
+}
+const fldExists=(k,i)=>k==='dose'||k==='temp'||k==='drain'||!!B.pours[i];
+function gapLabel(i){
+return i<B.pours.length-1?'Até o próximo':B.drain>0?'Até a drenagem':'Até servir';
+}
+function fieldName(k,i){
+const pl=()=>pourLabel(i,B.pours.length);
+if(k==='dose')return'dose';
+if(k==='temp')return B.vary?'temperatura base':'temperatura';
+if(k==='drain')return'duração da drenagem final';
+if(k==='ml')return'água do '+pl();
+if(k==='ptemp')return'temperatura do '+pl();
+return'tempo do '+pl()+(i<B.pours.length-1?' até o próximo despejo':B.drain>0?' até a drenagem':' até servir');
+}
+function stpHTML(k,i){
+const v=fldGet(k,i),b=BL[BK[k]],nm=fieldName(k,i);
+return `<div class="stp" data-k="${k}" data-i="${i}">
+<button type="button" class="stp-b" data-d="-1" aria-label="Diminuir ${nm}"${v<=b.min?' aria-disabled="true"':''}>−</button>
+<span class="stp-box"><input class="stp-in" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="done" value="${v}" aria-label="${nm[0].toUpperCase()+nm.slice(1)}, em ${UNIT_SPOKEN[k]}"></span>
+<button type="button" class="stp-b" data-d="1" aria-label="Aumentar ${nm}"${v>=b.max?' aria-disabled="true"':''}>+</button>
+</div>`;
+}
+/* campo = rótulo (com a unidade) + stepper; o texto do rótulo ganha id quando
+   precisa mudar ao vivo ("Até o próximo" ↔ "Até servir") */
+function fldHTML(label,k,i,textId){
+return `<div class="fld"><span class="fld-l" aria-hidden="true"><span${textId?` id="${textId}"`:''}>${label}</span> <span class="fld-u">· ${UNIT[k]}</span></span>${stpHTML(k,i)}</div>`;
+}
+
+function renderPours(){
+const el=document.getElementById('bld-pours');if(!el||!B)return;
+const n=B.pours.length;
+const undo=()=>`<div class="bld-undo" id="bld-undo" role="status"><span>${esc(B.undo.lbl)} removido</span>`+
+`<button type="button" class="bld-undo-btn" id="bld-undo-btn" onclick="undoRemove()">↶ Desfazer</button></div>`;
+let h='';
+B.pours.forEach((p,i)=>{
+if(B.undo&&B.undo.i===i)h+=undo();
+const lbl=pourLabel(i,n);
+h+=`<div class="bld-pour" data-pi="${i}" role="group" aria-labelledby="bp-l${i}" tabindex="-1">
+<div class="bp-head">
+<span class="pour-time" id="bp-t${i}">0:00</span>
+<span class="bp-name"><span class="bp-l" id="bp-l${i}">${lbl}</span><span class="bp-acc" id="bp-acc${i}"></span></span>
+<button type="button" class="bp-rm" data-rm="${i}" aria-label="Remover ${lbl}"${n<=1?' aria-disabled="true"':''}>✕</button>
+</div>
+<div class="bld-fields">
+${fldHTML('Água','ml',i)}
+${B.vary?fldHTML('Temperatura','ptemp',i):''}
+${fldHTML(gapLabel(i),'gap',i,'bp-gl'+i)}
+</div>
+</div>`;
+});
+if(B.undo&&B.undo.i>=n)h+=undo();
+el.innerHTML=h;
+renderBuilderLive();
+}
+
+/* Atualiza tudo o que é DERIVADO (instantes, acumulados, resumo, régua,
+   validação, limites) sem recriar os campos — quem está digitando não perde
+   o foco nem o cursor. */
+function renderBuilderLive(){
+if(!B)return;
+const $=id=>document.getElementById(id);
+const steps=customSteps(builderOut()),n=B.pours.length;
+const total=sumMl(B.pours),ratio=total/B.dose,T=steps[steps.length-1].atSec;
+let acc=0;
+B.pours.forEach((p,i)=>{
+acc+=p.ml;
+const t=$('bp-t'+i);if(t)t.textContent=fmtShort(steps[i].atSec);
+const a=$('bp-acc'+i);if(a)a.textContent=`até ${acc} ml`;
+const gl=$('bp-gl'+i);if(gl)gl.textContent=gapLabel(i);
+});
+$('bd-t').textContent=fmtShort(B.pours.reduce((a,p)=>a+p.gap,0));
+$('bsv-t').textContent=fmtShort(T);
+/* resumo */
+$('bs-water').innerHTML=`${total}<small>ml</small>`;
+const issue=builderIssue(ratio);
+$('bs-ratio').textContent=ratioLabel(ratio);
+$('bs-ratio-cell').setAttribute('data-bad',issue?'1':'0');
+$('bs-ratio-sr').textContent=issue?', fora da faixa do timer':'';
+const lv=planLevel(T);
+$('bs-time-cell').setAttribute('data-tstate',lv);
+$('bs-time').textContent=fmtShort(T);
+$('bs-time-sr').textContent=lv==='risk'?', acima de 4:00':lv==='over'?', acima de 3:30':'';
+$('bs-pours').textContent=n;
+$('bld-count').textContent=`${n} despejo${n>1?'s':''}`;
+/* régua: a mesma peça do setup, rotulada com o ml de cada despejo */
+const tl=timelineHTML(steps,i=>B.pours[i]?B.pours[i].ml:'');
+$('bld-timeline').innerHTML=tl.bar;$('bld-axis').innerHTML=tl.axis;
+/* mensagem: o bloqueio (proporção) vence o aviso (4:00) */
+const txt=issue||(lv==='risk'?`⚠ O plano passa de 4:00 (${fmtShort(T)}). Dá para salvar, mas o timer vai sinalizar risco de amargor.`:'');
+const msg=$('bld-msg');
+if(msg.textContent!==txt)msg.textContent=txt;
+msg.hidden=!txt;
+const save=$('bld-save');
+save.classList.toggle('is-invalid',!!issue);
+save.setAttribute('aria-disabled',issue?'true':'false');
+const add=$('bld-add'),full=n>=MAX_POURS;
+add.setAttribute('aria-disabled',full?'true':'false');
+add.textContent=full?`Máximo de ${MAX_POURS} despejos`:'+ Adicionar despejo';
+/* steppers: valor (menos o campo em digitação), limites e desvio de temperatura */
+const act=document.activeElement;
+document.querySelectorAll('#s-builder .stp').forEach(s=>{
+const k=s.dataset.k,i=+s.dataset.i;
+if(!fldExists(k,i))return;
+const v=fldGet(k,i),b=BL[BK[k]],inp=s.querySelector('.stp-in');
+if(inp&&inp!==act&&inp.value!==String(v))inp.value=v;
+const bt=s.querySelectorAll('.stp-b');
+/* nomes acessíveis acompanham o rótulo visível (ex.: último intervalo) */
+const nm=fieldName(k,i);
+if(s._nm!==nm){s._nm=nm;
+bt[0].setAttribute('aria-label','Diminuir '+nm);bt[1].setAttribute('aria-label','Aumentar '+nm);
+if(inp)inp.setAttribute('aria-label',`${nm[0].toUpperCase()+nm.slice(1)}, em ${UNIT_SPOKEN[k]}`);}
+bt[0].setAttribute('aria-disabled',v<=b.min?'true':'false');
+bt[1].setAttribute('aria-disabled',v>=b.max?'true':'false');
+s.classList.toggle('dev',k==='ptemp'&&B.vary&&v!==B.temp);
+});
+}
+function builderIssue(ratio){
+if(ratio<RATIO_MIN-1e-9)return`⚠ Concentrada demais (${ratioLabel(ratio)}). O timer trabalha de 1:${RATIO_MIN} a 1:${RATIO_MAX} — aumente a água ou reduza a dose.`;
+if(ratio>RATIO_MAX+1e-9)return`⚠ Diluída demais (${ratioLabel(ratio)}). O timer trabalha de 1:${RATIO_MIN} a 1:${RATIO_MAX} — reduza a água ou aumente a dose.`;
+return'';
+}
+
+/* ── edição de valores ── */
+function fldSet(k,i,v){
+if(!B||!fldExists(k,i))return;
+if(k==='dose')B.dose=v;
+else if(k==='temp'){
+/* com temperatura por despejo, a base leva junto só quem não tem a própria —
+   por marca, não por coincidência de valor: passar a base por cima dos 96 °C
+   do bloom não pode fundi-lo com os outros */
+B.temp=v;
+B.pours.forEach(p=>{if(!B.vary){p.temp=v;p.own=false;}else if(!p.own)p.temp=v;});
+}
+else if(k==='drain')B.drain=v;   // rótulo "até servir" ↔ "até a drenagem": renderBuilderLive
+else{
+const p=B.pours[i];
+if(k==='ml')p.ml=v;
+else if(k==='ptemp'){p.temp=v;p.own=v!==B.temp;}   // igualar à base = voltar a acompanhá-la
+else if(k==='gap')p.gap=v;
+}
+renderBuilderLive();
+}
+function stepField(k,i,d){
+if(!B||!fldExists(k,i))return;
+const b=BL[BK[k]],v=fldGet(k,i);
+/* ± encaixa na grade do passo: 62 ml → + → 65, − → 60 */
+let nv=d>0?Math.floor(v/b.step)*b.step+b.step:Math.ceil(v/b.step)*b.step-b.step;
+nv=Math.min(b.max,Math.max(b.min,nv));
+if(nv===v){vib(8);return;}
+fldSet(k,i,nv);
+const inp=document.querySelector(`#s-builder .stp[data-k="${k}"][data-i="${i}"] .stp-in`);
+if(inp)inp.value=nv;
+}
+function stpParse(s){const v=parseFloat(String(s).replace(',','.'));return isFinite(v)?Math.round(v):NaN;}
+/* digitando: aplica só valores já dentro da faixa, e com uma pausa — "250"
+   passa por "2" e "25" no caminho, e o resumo não pode piscar em vermelho */
+function onStpInput(inp){
+const s=inp.closest('.stp');if(!s||!B)return;
+const k=s.dataset.k,i=+s.dataset.i;
+clearTimeout(stpTimer);
+stpTimer=setTimeout(()=>{
+if(!B||!inp.isConnected||!fldExists(k,i))return;   // campo recriado: k/i já não valem
+const b=BL[BK[k]],v=stpParse(inp.value);
+if(isFinite(v)&&v>=b.min&&v<=b.max&&v!==fldGet(k,i))fldSet(k,i,v);
+},350);
+}
+/* Ao sair do campo (ou Enter): encaixa na faixa e reescreve o texto normalizado.
+   Roda no focusout, não no change: o change não dispara quando o texto final é
+   igual ao do foco — e digitar "4", pausar (o 4 já entrou no estado) e digitar
+   "5" em cima de um 45 deixava o campo mostrando 45 e a receita salva com 4. */
+function onStpCommit(inp){
+if(!inp.isConnected)return;
+const s=inp.closest('.stp');if(!s||!B)return;
+const k=s.dataset.k,i=+s.dataset.i;
+clearTimeout(stpTimer);
+if(!fldExists(k,i))return;
+let v=stpParse(inp.value);
+if(!isFinite(v))v=fldGet(k,i);
+v=clampTo(BK[k],v);
+if(v!==fldGet(k,i))fldSet(k,i,v);
+inp.value=v;
+}
+function commitFocusedStepper(){
+const a=document.activeElement;
+if(a&&a.classList&&a.classList.contains('stp-in'))onStpCommit(a);
+}
+function bldText(f,v){if(B)B[f]=v;}
+
+/* ── estrutura: adicionar, remover, desfazer, temperatura por despejo ── */
+function addPour(){
+if(!B)return;
+if(B.pours.length>=MAX_POURS){vib(8);return;}
+commitFocusedStepper();clearUndo();
+const last=B.pours[B.pours.length-1];
+B.pours.push({ml:last.ml,temp:last.temp,gap:last.gap,own:!!last.own});   // copia o último: é o palpite mais provável
+renderPours();vib(15);
+const el=document.querySelector(`#bld-pours [data-pi="${B.pours.length-1}"]`);
+if(el){
+el.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+el.focus({preventScroll:true});
+}
+}
+function removePour(i){
+if(!B||!B.pours[i])return;
+if(B.pours.length<=1){vib(8);return;}
+commitFocusedStepper();
+const lbl=pourLabel(i,B.pours.length);
+clearUndo();
+const p=B.pours.splice(i,1)[0];
+B.undo={p,i,lbl};
+B.undoTimer=setTimeout(expireUndo,6000);
+renderPours();vib(15);
+const u=document.getElementById('bld-undo-btn');if(u)u.focus({preventScroll:true});
+}
+function undoRemove(){
+if(!B||!B.undo)return;
+const u=B.undo;
+clearUndo();
+B.pours.splice(Math.min(u.i,B.pours.length),0,u.p);
+renderPours();vib(15);
+const el=document.querySelector(`#bld-pours [data-pi="${u.i}"]`);if(el)el.focus({preventScroll:true});
+}
+function clearUndo(){
+if(!B)return;
+clearTimeout(B.undoTimer);B.undoTimer=null;B.undo=null;
+const u=document.getElementById('bld-undo');if(u)u.remove();
+}
+/* expira sem recriar a lista: quem estiver digitando num despejo não perde o foco */
+function expireUndo(){
+if(!B)return;
+const u=document.getElementById('bld-undo'),hadFocus=!!u&&u.contains(document.activeElement);
+B.undo=null;B.undoTimer=null;
+if(u)u.remove();
+if(hadFocus){const a=document.getElementById('bld-add');if(a)a.focus({preventScroll:true});}
+}
+function toggleVary(){
+if(!B)return;
+commitFocusedStepper();
+B.vary=!B.vary;
+renderBase();renderPours();vib(15);
+}
+
+/* ── salvar, sair, excluir ── */
+function saveBuilder(){
+if(!B)return;
+commitFocusedStepper();
+const msg=document.getElementById('bld-msg');
+const issue=builderIssue(sumMl(B.pours)/B.dose);
+if(issue){
+msg.textContent=issue;msg.hidden=false;
+msg.classList.remove('pulse');void msg.offsetWidth;msg.classList.add('pulse');
+vib([40,60,40]);return;
+}
+/* editar e salvar sem ter mudado nada = concluir: não regrava nem esquece nada */
+if(B.id&&!builderDirty()){leaveBuilder();return;}
+const list=loadCustoms(),now=Date.now(),o=builderOut();
+const rec={id:B.id||newCustomId(rawCustoms(loadStore()).filter(Boolean)),...o,
+name:o.name||autoName(B.id?list.filter(c=>c.id!==B.id):list),
+created:B.created||now,updated:now};
+/* A memória da receita (dose, proporção, avaliação) só é apagada quando muda o
+   que se PREPARA. Trocar nome, dripper ou notas não invalida o que o barista
+   ajustou na última extração. */
+const brewSig=x=>JSON.stringify([x.dose,x.temp,x.vary,x.drain,x.pours]);
+const forget=B.id&&brewSig(o)!==brewSig(JSON.parse(B.initial))?'custom_'+B.id:null;
+/* relê o que foi gravado: aba anônima e cota cheia falham em silêncio */
+const ok=saveCustom(rec,forget)&&loadCustoms().some(c=>c.id===rec.id&&c.updated===rec.updated);
+if(!ok){
+msg.textContent='⚠ Não foi possível salvar: este navegador bloqueou o armazenamento local (aba anônima?).';
+msg.hidden=false;vib([40,60,40]);return;
+}
+clearUndo();B=null;
+buildList();
+pickCustom(rec.id);          // salvou → abre a receita pronta para preparar
+}
+function builderBack(){
+if(!B){show('s-select');return;}
+commitFocusedStepper();
+if(builderDirty())askConfirm({icon:'✎',title:'Descartar alterações?',
+text:B.id?'O que você mudou nesta receita não será salvo.':'A receita nova não será salva.',
+ok:'Descartar',cancel:'Seguir editando',onOk:leaveBuilder});
+else leaveBuilder();
+}
+function leaveBuilder(){
+const to=B?B.returnTo:'s-select';
+clearUndo();clearTimeout(stpTimer);B=null;
+if(to==='s-setup'&&R){wakeLockOn();show('s-setup');}
+else show('s-select');
+}
+function deleteBuilderRecipe(){
+if(!B||!B.id)return;
+const id=B.id,c=loadCustoms().find(x=>x.id===id);
+askConfirm({icon:'🗑',title:'Excluir receita?',
+text:`"${c?c.name:B.name.trim()||'Esta receita'}" será apagada deste aparelho. Não dá para desfazer.`,
+ok:'Excluir',onOk:()=>{
+deleteCustom(id);
+clearUndo();clearTimeout(stpTimer);B=null;
+buildList();show('s-select');
+}});
+}
+
+/* ── modal de confirmação genérico ── */
+let confirmCb=null,confirmFrom=null;
+function askConfirm(o){
+const m=document.getElementById('confirm-modal');
+document.getElementById('confirm-icon').textContent=o.icon||'?';
+document.getElementById('confirm-title').textContent=o.title;
+document.getElementById('confirm-text').textContent=o.text;
+document.getElementById('confirm-ok').textContent=o.ok||'Confirmar';
+document.getElementById('confirm-cancel').textContent=o.cancel||'Cancelar';
+confirmCb=o.onOk||null;confirmFrom=document.activeElement;
+m.classList.add('show');m.setAttribute('aria-hidden','false');
+/* foco no botão seguro: Enter acidental não apaga nada */
+setTimeout(()=>{if(m.classList.contains('show'))document.getElementById('confirm-cancel').focus();},30);
+}
+function closeConfirm(restore){
+const m=document.getElementById('confirm-modal');
+m.classList.remove('show');m.setAttribute('aria-hidden','true');
+confirmCb=null;
+if(restore&&confirmFrom&&document.contains(confirmFrom)){try{confirmFrom.focus({preventScroll:true});}catch(e){}}
+confirmFrom=null;
+}
+function confirmOk(){const cb=confirmCb;closeConfirm(false);if(cb)cb();}
+
+/* delegação: ± dos steppers, digitação, Enter/setas e remover despejo */
+(function(){
+const sc=document.getElementById('s-builder');
+sc.addEventListener('click',e=>{
+const sb=e.target.closest('.stp-b');
+if(sb){
+if(sb.getAttribute('aria-disabled')==='true'){vib(8);return;}
+const s=sb.closest('.stp');clearTimeout(stpTimer);
+stepField(s.dataset.k,+s.dataset.i,+sb.dataset.d);return;
+}
+const rm=e.target.closest('.bp-rm');
+if(rm){
+if(rm.getAttribute('aria-disabled')==='true'){vib(8);return;}
+removePour(+rm.dataset.rm);
+}
+});
+sc.addEventListener('input',e=>{if(e.target.classList.contains('stp-in'))onStpInput(e.target);});
+sc.addEventListener('focusout',e=>{if(e.target.classList&&e.target.classList.contains('stp-in'))onStpCommit(e.target);});
+sc.addEventListener('keydown',e=>{
+const t=e.target;
+if(!t.classList||!t.classList.contains('stp-in'))return;
+if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+e.preventDefault();onStpCommit(t);
+const s=t.closest('.stp');stepField(s.dataset.k,+s.dataset.i,e.key==='ArrowUp'?1:-1);
+}else if(e.key==='Enter'){e.preventDefault();t.blur();}
+});
+/* Tocar no número seleciona tudo: digitar substitui em vez de concatenar.
+   Selecionar no foco não basta — o mouseup/toque que vem depois reposiciona o
+   cursor e desfaz a seleção. Então: no foco (Tab) e de novo no click que
+   terminou o toque. E nunca depois do primeiro dígito: selecionaria o "2" já
+   digitado e "250" viraria "50" — por isso compara com o valor do foco.
+   Um segundo toque no campo já focado posiciona o cursor normalmente. */
+const selAll=t=>{try{if(document.activeElement===t&&t.value===t._v0)t.setSelectionRange(0,t.value.length);}catch(_){}};
+sc.addEventListener('focusin',e=>{
+const t=e.target;
+if(!t.classList||!t.classList.contains('stp-in'))return;
+t._v0=t.value;t._fresh=true;
+clearTimeout(t._selT);t._selT=setTimeout(()=>selAll(t),0);
+});
+sc.addEventListener('click',e=>{
+const t=e.target;
+if(!t.classList||!t.classList.contains('stp-in')||!t._fresh)return;
+t._fresh=false;selAll(t);
+});
+sc.addEventListener('beforeinput',e=>{const t=e.target;t._fresh=false;clearTimeout(t._selT);});
+})();
+
 /* ═══ INIT ═══ */
 loadTimeScale();
 buildChips();
@@ -2674,7 +3580,19 @@ document.addEventListener('keydown',e=>{
 if(e.key==='Escape'){
 const r=document.getElementById('reset-modal');if(r.classList.contains('show'))closeResetModal();
 const i=document.getElementById('ios-modal');if(i.classList.contains('show'))closeIosModal();
+const c=document.getElementById('confirm-modal');if(c.classList.contains('show'))closeConfirm(true);
 }
+/* foco preso no modal de confirmação enquanto ele estiver aberto */
+if(e.key==='Tab'){
+const c=document.getElementById('confirm-modal');
+if(c.classList.contains('show')){
+const f=[...c.querySelectorAll('button')],k=f.indexOf(document.activeElement);
+e.preventDefault();f[(k+(e.shiftKey?-1:1)+f.length)%f.length].focus();
+}
+}
+});
+document.getElementById('confirm-modal').addEventListener('click',e=>{
+if(e.target.id==='confirm-modal')closeConfirm(true);
 });
 document.getElementById('reset-modal').addEventListener('click',e=>{
 if(e.target.id==='reset-modal')closeResetModal();
