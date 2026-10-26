@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="WBrC Timer">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="Timer automático para receitas campeãs do World Brewers Cup 2015–2025 e extras (como o método de 10 despejos do Tetsu Kasuya), com despejos guiados, contagem regressiva e dose ajustável.">
+<meta name="description" content="Timer automático para receitas campeãs do World Brewers Cup 2015–2026 e extras (como o método de 10 despejos do Tetsu Kasuya), com despejos guiados, contagem regressiva e dose ajustável.">
 <meta name="theme-color" content="#0c0a08">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -1251,7 +1251,7 @@ border:2px solid var(--border)}
 <div class="head-row">
 <div>
 <h1 class="s1-title">WBrC Timer</h1>
-<p class="s1-sub">Timer guiado · Campeões 2015–2025 + Extras</p>
+<p class="s1-sub">Timer guiado · Campeões 2015–2026 + Extras</p>
 </div>
 <div class="head-count" aria-hidden="true"><b id="head-count-n">0</b>receitas</div>
 </div>
@@ -1451,6 +1451,37 @@ aria-labelledby="tscale-label" onclick="toggleTimeScale()"><span class="ts-track
    RECIPES — frac-based, ratio as number
    ═══════════════════════════════════════════ */
 const RECIPES=[
+// ═══ 2026 Bruxelas (World of Coffee) ═══
+/* Pódio: 1º Nas Jaafar (MY, 469), 2º Simon Gautherin (AU, 461), 3º Bavis Kwong (HK, 459).
+   O 2º lugar NÃO entra: a receita final dele não tem tempo publicado — ele encerra
+   pelo rendimento (140 g, descartando os 10 g iniciais), não pelo relógio. Entra
+   quando sair completa. Fontes: note.com/brewers (Fujisaki, rodada 1 e final),
+   gota.cafe (UFO V3 · Jaafar), Zest Coffee e Roastopedia (classificação e notas). */
+/* Jaafar · UFO V3 sobre base Hario Switch · 15 g / 200 g · 92 °C. Duas fases:
+   percolação com a Switch aberta até 100 g; fecha em 0:58; imersão com os outros
+   100 g a partir de 1:00 (~15 s de despejo); abre em 2:00 e drena até 2:10.
+   Mesmo valor na rodada 1 e na final. */
+{id:'jaafar2026',year:2026,place:1,flag:'🇲🇾',champion:'Nas Jaafar',country:'Malásia',
+dripper:'UFO V3 + Hario Switch',ratio:200/15,
+designDose:15,steps:[
+{atSec:0,type:'pour',label:'1ª Fase · Percolação',frac:100/200,temp:92,note:'Switch aberta · espiral até 100 g'},
+{atSec:58,type:'wait',label:'Fechar a Switch',dur:2},
+{atSec:60,type:'pour',label:'2ª Fase · Imersão',frac:100/200,temp:92,note:'Switch fechada · espiral até 200 g'},
+{atSec:75,type:'wait',label:'Imersão com a Switch fechada',dur:45},
+{atSec:120,type:'drain',label:'Abrir a Switch e drenar',dur:10},
+{atSec:130,type:'serve',label:'Servir'}]},
+/* Kwong · Contour Dripper · 16 g (2 g finos embaixo + 14 g grossos em cima,
+   peneira de 900 µ, dois filtros Sibarist Fast em sanduíche) / 215 ml · 95 °C na
+   final (94 °C na rodada 1). Bloom de 15 g e 4 × 50 g a cada 40 s; termina em 3:25. */
+{id:'kwong2026',year:2026,place:3,flag:'🇭🇰',champion:'Bavis Kwong',country:'Hong Kong',
+dripper:'Contour Dripper',ratio:215/16,
+designDose:16,steps:[
+{atSec:0,type:'pour',label:'Bloom',frac:15/215,temp:95,note:'leito em sanduíche: 2 g fino · filtro · 14 g grosso'},
+{atSec:40,type:'pour',label:'2º Despejo',frac:50/215,temp:95},
+{atSec:80,type:'pour',label:'3º Despejo',frac:50/215,temp:95},
+{atSec:120,type:'pour',label:'4º Despejo',frac:50/215,temp:95},
+{atSec:160,type:'pour',label:'5º Despejo',frac:50/215,temp:95},
+{atSec:205,type:'serve',label:'Servir'}]},
 // ═══ 2025 Jakarta ═══
 {id:'peng2025',year:2025,place:1,flag:'🇨🇳',champion:'George Jinyang Peng',country:'China',
 dripper:'Solo Dripper + Melodrip',ratio:14,
@@ -2558,6 +2589,9 @@ function startBrew(){
    anterior deixou curIdx no último passo. */
 t0=Date.now();curIdx=0;finalMs=null;
 riskAnnounced=false;frozenState=null;lastTickEl=0;overtime=false;autoFinished=false;dismissGap();
+/* zera o relógio já no início: antes, o tempo final do preparo anterior (ex.: 07:45)
+   aparecia por até 80 ms, até o primeiro tick, bem no "DESPEJE!" */
+document.getElementById('brew-clock').textContent=fmtMs(0);
 applyTimeState(0,false);
 setPaused(false);
 buildDots();
@@ -2704,7 +2738,8 @@ function showGap(fromIdx,toIdx,secs){
 const el=document.getElementById('gap-notice');if(!el)return;
 const pulados=[];
 for(let i=fromIdx+1;i<toIdx;i++)if(R.steps[i].type==='pour')pulados.push(R.steps[i].label);
-el.textContent=`⚠ O app ficou parado ${fmtShort(secs)}${pulados.length?` — ${pulados.length} despejo${pulados.length>1?'s':''} passaram sem aviso (${pulados.join(', ')})`:''}`;
+const np=pulados.length;   // concordância: "1 despejo passou", "2 despejos passaram"
+el.textContent=`⚠ O app ficou parado ${fmtShort(secs)}${np?` — ${np} despejo${np>1?'s':''} ${np>1?'passaram':'passou'} sem aviso (${pulados.join(', ')})`:''}`;
 el.hidden=false;gapShown=true;
 }
 function dismissGap(){const el=document.getElementById('gap-notice');if(el){el.hidden=true;}gapShown=false;}
