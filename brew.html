@@ -1161,6 +1161,12 @@ border:2px solid var(--border)}
 @media (min-width:600px){
 .bld-sum,.bld-msg{padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px))}
 }
+
+/* ═══ v7 · CÓPIA DE RECEITA ("Criar minha versão") ═══
+   Mesma peça do convite "Criar receita" da lista, no fim da tabela de despejos:
+   é ali que o barista termina de ler a receita e decide fazer a dele. */
+.create-card[hidden]{display:none}
+.pours-section .create-card{margin:16px 0 0}
 @media (max-width:380px){
 .bs-l{font-size:8.5px;letter-spacing:.3px}
 .bs-v{font-size:15px}
@@ -1351,6 +1357,11 @@ aria-labelledby="tscale-label" onclick="toggleTimeScale()"><span class="ts-track
 <div class="timeline" id="pour-timeline" aria-hidden="true"></div>
 <div class="tl-axis" id="pour-axis" aria-hidden="true"></div>
 <div id="pours-table"></div>
+<button type="button" class="create-card" id="setup-copy" hidden onclick="copyCurrentRecipe()">
+<span class="cc-plus" aria-hidden="true">+</span>
+<span class="cc-body"><span class="cc-t">Criar minha versão</span>
+<span class="cc-s">Cópia editável em Minhas receitas, com a dose e os tempos da tela</span></span>
+</button>
 </div>
 </div>
 <button class="start-btn" onclick="beginCountdown()">Iniciar Timer</button>
@@ -1371,6 +1382,10 @@ aria-labelledby="tscale-label" onclick="toggleTimeScale()"><span class="ts-track
 </div>
 <div class="bld-msg" id="bld-msg" role="status" aria-live="polite" hidden></div>
 <div class="s2-body" id="bld-body">
+<div class="recipe-note" id="bld-copy" hidden>
+<span class="rn-label">Cópia</span>
+<span class="rn-text" id="bld-copy-text"></span>
+</div>
 <div class="bld-card">
 <h3 class="pours-title"><span>Receita</span></h3>
 <label class="fld-l" for="bld-name">Nome</label>
@@ -2496,6 +2511,8 @@ document.getElementById('pours-count').textContent=`${pours.length} despejo${pou
 /* receita do usuário: botão Editar no lugar do espaçador, e a nota é dele */
 const ed=document.getElementById('setup-edit'),sp=document.getElementById('setup-spacer');
 if(ed){ed.hidden=!R.isCustom;if(sp)sp.hidden=!!R.isCustom;}
+/* receitas do app: "Criar minha versão" (nas do usuário, o ✎ já resolve) */
+const cpb=document.getElementById('setup-copy');if(cpb)cpb.hidden=!!R.isCustom;
 const nl=document.getElementById('recipe-note-label');
 if(nl)nl.textContent=R.isCustom?'Suas notas':'Sobre a receita';
 /* nota descritiva (só aparece quando a receita traz uma) */
@@ -3136,6 +3153,75 @@ renderSetup();show('s-setup');
 }
 function editCurrentCustom(){if(R&&R.isCustom)openBuilder(R.customId,'s-setup');}
 
+/* ═══ CÓPIA: receita do app → "Minhas receitas" ═══
+   Copia o que está NA TELA do setup — dose, proporção (com ajuste fino) e tempos
+   (com ou sem a escala por dose) —, para que o timer da cópia rode igual ao da
+   original: mesmos instantes, mesmos ml exibidos, mesmas temperaturas.
+   O que o construtor não representa vai para as notas, com o horário: esperas e
+   drenagens viram intervalos (o nome delas fica escrito), as notas dos despejos
+   também, e o gelo do Flash Brew vira uma linha de texto. Valores fora dos
+   limites do construtor (dose em gramas inteiros, intervalo ≥ 10 s…) são
+   ajustados e o aviso diz quais. Nada é gravado aqui: a cópia abre no
+   construtor como receita nova e só passa a existir depois do Salvar. */
+function recipeToCustom(){
+const steps=R.steps,pIdx=[];
+steps.forEach((st,i)=>{if(st.type==='pour')pIdx.push(i);});
+const serve=steps[steps.length-1].atSec,lastP=pIdx[pIdx.length-1];
+const dI=steps.findIndex((st,i)=>i>lastP&&st.type==='drain');
+const drainStart=dI>=0?steps[dI].atSec:null;
+const adj={gap:0,ml:0,drain:false};
+const pours=pIdx.map((si,j)=>{
+const next=j<pIdx.length-1?steps[pIdx[j+1]].atSec:(drainStart!=null?drainStart:serve);
+const g=next-steps[si].atSec,ml=pourDispAt(si);
+const gc=clampTo('gap',g),mc=clampTo('ml',ml);
+if(gc!==g)adj.gap++;
+if(mc!==ml)adj.ml++;
+return{ml:mc,temp:clampTo('temp',steps[si].temp),gap:gc};
+});
+let drain=0;
+if(drainStart!=null){const d=serve-drainStart;drain=clampTo('drain',d);if(drain!==d)adj.drain=true;}
+/* base = a temperatura mais frequente; empate fica com a do 1º despejo */
+const cnt={};pours.forEach(p=>{cnt[p.temp]=(cnt[p.temp]||0)+1;});
+let base=pours[0].temp;
+Object.keys(cnt).forEach(t=>{if(cnt[t]>cnt[base])base=+t;});
+const vary=pours.some(p=>p.temp!==base);
+const kas=String(R.key||'').startsWith('kasuya_');
+const src=R.isExtra?`${R.title} · ${R.champion}`:kas?`Kasuya 4:6 ${R.variantName} · WBrC 2016`:`${R.champion} · WBrC ${R.year}`;
+/* o que o construtor não representa, por ordem de importância: gelo, ações, notas */
+const lines=[];
+if(R.iceFrac)lines.push(`gelo na jarra: ${rnd(totalW()*R.iceFrac)} g (o construtor não conta o gelo)`);
+steps.forEach(st=>{if(st.type==='wait'||st.type==='drain')lines.push(`${fmtShort(st.atSec)} ${st.label}`);});
+steps.forEach(st=>{if(st.type==='pour'&&st.note)lines.push(`${fmtShort(st.atSec)} ${st.note}`);});
+let notes=`Cópia de ${src}.`+(lines.length?' '+lines.join(' · '):'');
+if(notes.length>NOTES_MAX)notes=notes.slice(0,NOTES_MAX-1).trimEnd()+'…';
+const d=clampTo('dose',dose);
+/* nome sugerido, sem repetir um que já exista em Minhas receitas */
+const list=loadCustoms();
+const baseName=(R.isExtra?R.title:kas?`Kasuya 4:6 · ${R.variantName}`:`${R.champion} ${R.year}`).slice(0,NAME_MAX-5).trim();
+let name=baseName,k=2;
+while(list.some(c=>c.name===name))name=`${baseName} (${k++})`;
+const c={name,dripper:(kas?'Hario V60':(R.dripperShort||R.dripper)).slice(0,DRIPPER_MAX).trim(),
+dose:d,temp:base,vary,notes,drain,pours:pours.map(p=>({ml:p.ml,temp:vary?p.temp:base,gap:p.gap}))};
+const a=[];
+if(d!==dose)a.push(`dose de ${fmtDose(dose)} → ${fmtDose(d)}, mesma água`);
+if(adj.gap)a.push(`${adj.gap} intervalo${adj.gap>1?'s':''} fora de 10–300 s`);
+if(adj.ml)a.push(`${adj.ml} despejo${adj.ml>1?'s':''} fora de 5–600 ml`);
+if(adj.drain)a.push('drenagem acima de 300 s');
+const info=`Baseada em ${src}, em ${fmtDose(dose)} · ${ratioLabel(R.ratio)}, com os tempos da tela.`
++(steps.some(st=>st.type==='wait')?' As esperas viraram intervalos; os nomes estão nas notas.':'')
++(R.iceFrac?' O gelo não entra: a quantidade está nas notas.':'')
+/* sem o gelo, uma proporção baixa no setup pode cair abaixo de 1:10 (só água quente) */
++(R.iceFrac&&builderIssue(sumMl(c.pours)/d)?` Sem o gelo, a proporção fica em ${ratioLabel(sumMl(c.pours)/d)}, abaixo do mínimo do timer: ajuste a água ou a dose antes de salvar.`:'')
++(a.length?` Ajustado aos limites do construtor: ${a.join('; ')}.`:'')
++' Nada é salvo até você tocar em Salvar.';
+return{c,info};
+}
+function copyCurrentRecipe(){
+if(!R||R.isCustom)return;
+const r=recipeToCustom();
+openBuilder(null,'s-setup',{src:r.c,info:r.info});
+}
+
 /* ── estado do construtor ── (null = fechado) */
 let B=null,stpTimer=null;
 /* receita inicial: 20 g · 300 ml (1:15) · bloom de 45 s · três despejos de
@@ -3164,13 +3250,14 @@ while(list.some(c=>c.id===id));
 return id;
 }
 
-function openBuilder(id,returnTo){
+function openBuilder(id,returnTo,prefill){
 const list=loadCustoms();
 const c=id?list.find(x=>x.id===id):null;
 if(id&&!c){buildList();show('s-select');return;}
-const src=c||BUILDER_NEW;
-B={id:c?c.id:null,created:c?c.created:0,returnTo:returnTo||'s-select',
-name:c?c.name:'',dripper:src.dripper,dose:src.dose,temp:src.temp,vary:!!src.vary,
+/* prefill = cópia de uma receita do app: abre como receita NOVA, ainda não gravada */
+const src=c||(prefill&&prefill.src)||BUILDER_NEW;
+B={id:c?c.id:null,created:c?c.created:0,returnTo:returnTo||'s-select',copyInfo:prefill?prefill.info:'',
+name:c?c.name:(prefill?prefill.src.name:''),dripper:src.dripper,dose:src.dose,temp:src.temp,vary:!!src.vary,
 notes:src.notes||'',drain:src.drain,
 /* own = o despejo tem temperatura própria (não acompanha a base) */
 pours:src.pours.map(p=>{const t=p.temp!=null?p.temp:src.temp;return{ml:p.ml,temp:t,gap:p.gap,own:!!src.vary&&t!==src.temp};}),
@@ -3193,6 +3280,7 @@ const nm=$('bld-name');nm.value=B.name;nm.placeholder=B.placeholder;
 $('bld-dripper').value=B.dripper;
 $('bld-notes').value=B.notes;
 $('bld-del').hidden=!B.id;
+const cp=$('bld-copy');if(cp){cp.hidden=!B.copyInfo;$('bld-copy-text').textContent=B.copyInfo||'';}
 $('bld-drain-f').innerHTML=fldHTML('Duração','drain',0);
 renderBase();
 renderPours();              // termina em renderBuilderLive()

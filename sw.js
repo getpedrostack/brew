@@ -1,5 +1,5 @@
 /* Service worker — app shell offline, amigável a updates. Só ativa em http(s). */
-const CACHE = 'wbrc-shell-v10';
+const CACHE = 'wbrc-shell-v11';
 const ASSETS = [
   './brew.html',
   './manifest.webmanifest',
