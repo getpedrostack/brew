@@ -1169,6 +1169,13 @@ border:2px solid var(--border)}
 .steep-presets .dose-preset{flex:1 1 0;min-width:44px;padding:0 4px}
 /* 320 px: 5 × 44 px só cabem com o espaçamento mínimo */
 @media (max-width:340px){.steep-presets{gap:3px;padding:2px 0}}
+/* passos de ação da imersão (agitar, encaixar, pressionar): o verde de ação do
+   app, o mesmo do "DESPEJE AGORA"; a instrução sobe para o tom do texto */
+.step-wait.step-act{background:linear-gradient(160deg,#123029 0%,var(--green-bg) 70%);border-color:var(--green)}
+.step-act .step-type{color:var(--green)}
+.step-act .ring-fill{stroke:var(--green)}
+.step-act .ring-time{color:var(--green)}
+.step-act .step-sub{color:var(--text);font-weight:700}
 
 /* ═══ v7 · CÓPIA DE RECEITA ("Criar minha versão") ═══
    Mesma peça do convite "Criar receita" da lista, no fim da tabela de despejos:
@@ -1862,34 +1869,42 @@ designDose:15,steps:[
 /* AeroPress · infusão longa — receita da casa (Pedro, 2026-11-09).
    Brew ratio de 6% (60 g de café por litro → 1:16,7): 18 g / 300 ml na AeroPress XL,
    água a 85 °C, moagem fina de espresso (EK43). O tempo vai de 7:00 a 9:00 e é
-   escolhido no setup de 30 em 30 s; o êmbolo desce no tempo escolhido e o tempo
-   total fecha ali. Imersão: sem alerta de 4:00 e sem escala do tempo pela dose
-   (flag `steep`). A agenda das agitações sai de steepSteps(). */
+   escolhido no setup de 30 em 30 s, e é o TOTAL: inclui os 45 s de descida do
+   êmbolo e termina no corte (a AeroPress sai do recipiente). Imersão: sem alerta
+   de 4:00 e sem escala do tempo pela dose (flag `steep`). Agenda em steepSteps(). */
 {id:'aeropresslonga',key:'aeropresslonga',badge:'IMERSÃO',flag:'⏳',
 champion:'Receita da casa',country:'Brasil',year:2026,isExtra:true,defaultDose:18,
 title:'AeroPress Infusão Longa',byline:'Receita da casa',
 dripper:'AeroPress XL',dripperShort:'AeroPress XL',ratio:300/18,
 steep:{min:420,max:540,step:30,def:480,temp:85},
-tagline:'Imersão de 7 a 9 min: você escolhe o tempo, e o êmbolo desce quando ele acaba.',
-desc:'Brew ratio de 6% (60 g de café por litro · 1:16,7), água a 85 °C e moagem fina, de espresso (EK43). Escolha o tempo de 7:00 a 9:00, de 30 em 30 s: amargou na xícara, use menos tempo ou moa um pouco mais grosso; ácido demais, mais tempo ou um pouco mais fino. Agitação leve com a espátula a cada 3 min; a última sempre 30 s antes do êmbolo. O tempo total vai da água tocando o pó até o êmbolo descer.',
+tagline:'Imersão de 7 a 9 min. O tempo total inclui a descida do êmbolo e termina no corte.',
+desc:'Brew ratio de 6% (60 g de café por litro · 1:16,7), água a 85 °C e moagem fina, de espresso (EK43). Escolha o tempo de 7:00 a 9:00, de 30 em 30 s: amargou na xícara, use menos tempo ou moa um pouco mais grosso; ácido demais, mais tempo ou um pouco mais fino. Agitação leve com a espátula a cada 3 min. Nos 30 s antes da descida, a última agitação e o encaixe do êmbolo; a descida leva 45 s e termina no corte, quando a AeroPress sai do recipiente. O tempo total vai da água tocando o pó até o corte.',
 designDose:18,steps:steepSteps(480,85)},
 ];
 
-/* ═══ IMERSÃO LONGA: agenda das agitações ═══
-   Agitação leve a cada 3 min a partir da água no pó; a última, sempre 30 s antes
-   do êmbolo. Se a penúltima cair a 30 s ou menos da última (em 7:00 seriam 6:00 e
-   6:30), ela sai e vale só a última — regra do Pedro. O êmbolo desce no tempo
-   escolhido: é o passo "servir" e, portanto, o alvo do relógio. Os 20 s do despejo
-   só trocam o cartão "despeje" pelo "aguarde"; não mexem no tempo total. */
+/* ═══ IMERSÃO LONGA: agenda ═══
+   O tempo escolhido T é o TOTAL — da água no pó até o CORTE, quando a AeroPress
+   sai do recipiente — e inclui a descida do êmbolo (regras do Pedro, 09/11):
+     T − 0:45  descida do êmbolo (45 s), que termina no corte em T;
+     T − 1:15  última agitação + encaixe do êmbolo (os 30 s antes da descida);
+     agitação leve a cada 3 min desde 0:00; se a penúltima cair a 30 s ou menos
+     da última, ela sai e vale só a última.
+   Passos de ação (agitar, encaixar, pressionar) levam `act` e um verbo no
+   cabeçalho (`cue`); a agitação comum é um cartão de 10 s seguido de "Infusão".
+   Os 20 s do despejo e os 10 s da agitação só trocam o cartão: o total é T. */
 function steepSteps(T,temp){
-const last=T-30,stirs=[];
+const press=T-45,last=press-30,stirs=[];
 for(let t=180;t<last;t+=180)stirs.push(t);
 if(stirs.length&&last-stirs[stirs.length-1]<=30)stirs.pop();
 const steps=[{atSec:0,type:'pour',label:'Toda a água',frac:1,temp:temp,note:'o tempo conta desde que a água toca o pó'},
 {atSec:20,type:'wait',label:'Infusão',dur:0}];
-stirs.forEach(t=>steps.push({atSec:t,type:'wait',label:'Agitação leve com a espátula',dur:0}));
-steps.push({atSec:last,type:'wait',label:'Última agitação · êmbolo em 30 s',dur:0});
-steps.push({atSec:T,type:'serve',label:'Pôr o êmbolo e pressionar'});
+stirs.forEach(t=>{
+steps.push({atSec:t,type:'wait',act:true,icon:'🥄',cue:'🥄 AGITE AGORA',label:'Agitação leve',note:'de leve, com a espátula',dur:0});
+steps.push({atSec:t+10,type:'wait',label:'Infusão',dur:0});
+});
+steps.push({atSec:last,type:'wait',act:true,icon:'🥄',cue:'🥄 AGITE E ENCAIXE O ÊMBOLO',label:'Última agitação + encaixe do êmbolo',note:'agite de leve, encaixe o êmbolo e prepare-se: a descida começa no zero',dur:0});
+steps.push({atSec:press,type:'wait',act:true,icon:'⬇',cue:'⬇ PRESSIONE O ÊMBOLO',label:'Descida do êmbolo',note:'pressão leve e constante · 45 s até o fim',dur:0});
+steps.push({atSec:T,type:'serve',icon:'✂',cue:'✂ CORTE DA EXTRAÇÃO',label:'Separe a AeroPress do recipiente'});
 steps.forEach((st,i)=>{if(st.dur!=null&&steps[i+1])st.dur=steps[i+1].atSec-st.atSec;});
 return steps;
 }
@@ -2629,7 +2644,7 @@ return `<div class="pour-row">
 }
 return `<div class="pour-row">
 <div class="pour-time drain">${fmtShort(s.atSec)}</div>
-<div class="pour-name" style="color:var(--text-dim);font-weight:600">${STEP_ICON[s.type]||'·'} ${s.label}</div>
+<div class="pour-name" style="color:var(--text-dim);font-weight:600">${s.icon||STEP_ICON[s.type]||'·'} ${s.label}</div>
 <div class="pour-temp" style="color:var(--text-muted)">—</div>
 <div class="pour-amt" style="color:var(--text-muted);font-size:12px">${s.dur?s.dur+'s':'—'}</div>
 </div>`;
@@ -2803,7 +2818,7 @@ function timerMetaText(el,st){
 const T=targetSec(),e=Math.floor(el),d=Math.abs(e-T);
 if(st==='risk')return e>T?`⚠ amargor · +${fmtShort(d)} do alvo`:`⚠ amargor · alvo ${fmtShort(T)}`;
 if(st==='over')return `alvo ${fmtShort(T)} · +${fmtShort(d)}`;
-if(st==='draining')return `${R&&R.steep?'pressionando':'escoando'} · +${fmtShort(d)}`;
+if(st==='draining')return `${R&&R.steep?'após o corte':'escoando'} · +${fmtShort(d)}`;
 if(e===T)return `alvo ${fmtShort(T)} · no alvo`;
 return `alvo ${fmtShort(T)} · faltam ${fmtShort(d)}`;
 }
@@ -2817,7 +2832,7 @@ top.setAttribute('data-frozen',frozen?'1':'0');
 const m=document.getElementById('brew-meta');
 if(m)m.textContent=frozen?`encerrado · alvo ${fmtShort(targetSec())}`:timerMetaText(el,st);
 const c=document.getElementById('brew-clock');
-const diz={risk:'risco de amargor',over:'passou do alvo',draining:R&&R.steep?'pressionando o êmbolo':'escoando após o alvo',ok:'dentro do alvo'};
+const diz={risk:'risco de amargor',over:'passou do alvo',draining:R&&R.steep?'após o tempo de corte':'escoando após o alvo',ok:'dentro do alvo'};
 if(c)c.setAttribute('aria-label',`Tempo decorrido, ${diz[st]}`);
 return st;
 }
@@ -2953,9 +2968,12 @@ ${s.note?`<div class="step-sub">${s.note}</div>`:''}
 else if(s.type==='wait'){
 const dur=s.dur||0;
 const C=2*Math.PI*78;
-area.innerHTML=`<div class="step-wait">
-<div class="step-type">⏱ AGUARDAR</div>
-<div class="step-name">${s.label}</div>
+/* passo de ação (imersão: agitar, encaixar, pressionar): verbo no cabeçalho,
+   instrução embaixo e o verde de ação; espera comum segue igual */
+area.innerHTML=`<div class="step-wait${s.act?' step-act':''}">
+<div class="step-type">${s.cue||'⏱ AGUARDAR'}</div>
+<div class="step-name">${s.label}</div>${s.note?`
+<div class="step-sub">${s.note}</div>`:''}
 <div class="countdown-ring">
 <svg viewBox="0 0 180 180" preserveAspectRatio="xMidYMid meet">
 <circle class="ring-bg" cx="90" cy="90" r="78"/>
@@ -2985,9 +3003,9 @@ stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}"/>
 else if(s.type==='serve'){
 area.innerHTML=`<div class="step-serve">
 <div class="serve-icon" aria-hidden="true">☕</div>
-<div class="step-type">✓ PRONTO</div>
+<div class="step-type">${s.cue||'✓ PRONTO'}</div>
 <div class="step-name">${s.label}</div>
-<div class="step-sub" style="margin:8px 0 0">Toque em <b>Concluir</b> quando ${R.steep?'o êmbolo chegar ao fim':'terminar de escoar'}</div>
+<div class="step-sub" style="margin:8px 0 0">${R.steep?'Separe agora e toque em <b>Concluir</b>':'Toque em <b>Concluir</b> quando terminar de escoar'}</div>
 </div>`;
 /* finish é agendado de forma cancelável em onStepChange (C1/C2) */
 }
@@ -3018,13 +3036,13 @@ const bar=document.getElementById('next-bar');
 const ns=R.steps[curIdx+1];
 if(!ns){
 bar.className='next-bar';
-bar.innerHTML=`<div class="next-content"><span class="next-action" style="text-align:center;color:var(--text-dim)">${overtime?(R.steep?'⏳ Pressionando — o relógio segue correndo':'⏳ Escoamento final — o relógio segue correndo'):'Última etapa'}</span></div>`;
+bar.innerHTML=`<div class="next-content"><span class="next-action" style="text-align:center;color:var(--text-dim)">${overtime?(R.steep?'✂ Separe a AeroPress e toque em Concluir':'⏳ Escoamento final — o relógio segue correndo'):'Última etapa'}</span></div>`;
 return;
 }
 let txt='';
 if(ns.type==='pour')txt=`☕ ${ns.label} · ${pourDispAt(curIdx+1)}ml · ${ns.temp}°C`;
-else if(ns.type==='serve')txt=R.steep?'✓ '+ns.label:'✓ Servir';
-else if(ns.type==='wait')txt=`⏱ ${ns.label}`;
+else if(ns.type==='serve')txt=R.steep?`${ns.icon||'✓'} ${ns.label}`:'✓ Servir';
+else if(ns.type==='wait')txt=`${ns.icon||'⏱'} ${ns.label}`;
 else if(ns.type==='drain')txt=`⬇ ${ns.label}`;
 else txt=ns.label;
 bar.className='next-bar';
