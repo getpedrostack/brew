@@ -1162,6 +1162,14 @@ border:2px solid var(--border)}
 .bld-sum,.bld-msg{padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px))}
 }
 
+/* ═══ v8 · IMERSÃO LONGA (AeroPress) ═══
+   O seletor de tempo usa a peça dos presets de dose; os cinco cabem lado a lado
+   até em 320 px (cada um com 44 px de alvo). */
+.steep-presets{margin-top:0;flex-wrap:nowrap}
+.steep-presets .dose-preset{flex:1 1 0;min-width:44px;padding:0 4px}
+/* 320 px: 5 × 44 px só cabem com o espaçamento mínimo */
+@media (max-width:340px){.steep-presets{gap:3px;padding:2px 0}}
+
 /* ═══ v7 · CÓPIA DE RECEITA ("Criar minha versão") ═══
    Mesma peça do convite "Criar receita" da lista, no fim da tabela de despejos:
    é ali que o barista termina de ler a receita e decide fazer a dele. */
@@ -1322,6 +1330,11 @@ placeholder="Buscar campeão, país ou dripper…" oninput="onSearch(this.value)
 <button class="ratio-btn" type="button" onclick="changeRatio(.5)" aria-label="Aumentar proporção, mais diluído">+</button>
 </div>
 <div class="ratio-hint" id="ratio-hint">menor = mais concentrado · maior = mais diluído</div>
+</div>
+<div class="ratio-row" id="steep-row" hidden>
+<div class="ratio-head"><span class="ratio-label" id="steep-label">Tempo de infusão</span></div>
+<div class="dose-presets steep-presets" id="steep-presets" role="group" aria-labelledby="steep-label"></div>
+<div class="ratio-hint">amargo → menos tempo · ácido → mais tempo</div>
 </div>
 <div class="tscale-row" id="tscale-row" hidden>
 <button class="tscale-sw" id="tscale-sw" type="button" role="switch" aria-checked="true"
@@ -1845,7 +1858,41 @@ designDose:15,steps:[
 {atSec:90,type:'drain',label:'Drenagem sobre o gelo',dur:60},
 {atSec:150,type:'wait',label:'Girar a jarra até derreter o gelo',dur:30},
 {atSec:180,type:'serve',label:'Servir sobre gelo fresco'}]},
+
+/* AeroPress · infusão longa — receita da casa (Pedro, 2026-11-09).
+   Brew ratio de 6% (60 g de café por litro → 1:16,7): 18 g / 300 ml na AeroPress XL,
+   água a 85 °C, moagem fina de espresso (EK43). O tempo vai de 7:00 a 9:00 e é
+   escolhido no setup de 30 em 30 s; o êmbolo desce no tempo escolhido e o tempo
+   total fecha ali. Imersão: sem alerta de 4:00 e sem escala do tempo pela dose
+   (flag `steep`). A agenda das agitações sai de steepSteps(). */
+{id:'aeropresslonga',key:'aeropresslonga',badge:'IMERSÃO',flag:'⏳',
+champion:'Receita da casa',country:'Brasil',year:2026,isExtra:true,defaultDose:18,
+title:'AeroPress Infusão Longa',byline:'Receita da casa',
+dripper:'AeroPress XL',dripperShort:'AeroPress XL',ratio:300/18,
+steep:{min:420,max:540,step:30,def:480,temp:85},
+tagline:'Imersão de 7 a 9 min: você escolhe o tempo, e o êmbolo desce quando ele acaba.',
+desc:'Brew ratio de 6% (60 g de café por litro · 1:16,7), água a 85 °C e moagem fina, de espresso (EK43). Escolha o tempo de 7:00 a 9:00, de 30 em 30 s: amargou na xícara, use menos tempo ou moa um pouco mais grosso; ácido demais, mais tempo ou um pouco mais fino. Agitação leve com a espátula a cada 3 min; a última sempre 30 s antes do êmbolo. O tempo total vai da água tocando o pó até o êmbolo descer.',
+designDose:18,steps:steepSteps(480,85)},
 ];
+
+/* ═══ IMERSÃO LONGA: agenda das agitações ═══
+   Agitação leve a cada 3 min a partir da água no pó; a última, sempre 30 s antes
+   do êmbolo. Se a penúltima cair a 30 s ou menos da última (em 7:00 seriam 6:00 e
+   6:30), ela sai e vale só a última — regra do Pedro. O êmbolo desce no tempo
+   escolhido: é o passo "servir" e, portanto, o alvo do relógio. Os 20 s do despejo
+   só trocam o cartão "despeje" pelo "aguarde"; não mexem no tempo total. */
+function steepSteps(T,temp){
+const last=T-30,stirs=[];
+for(let t=180;t<last;t+=180)stirs.push(t);
+if(stirs.length&&last-stirs[stirs.length-1]<=30)stirs.pop();
+const steps=[{atSec:0,type:'pour',label:'Toda a água',frac:1,temp:temp,note:'o tempo conta desde que a água toca o pó'},
+{atSec:20,type:'wait',label:'Infusão',dur:0}];
+stirs.forEach(t=>steps.push({atSec:t,type:'wait',label:'Agitação leve com a espátula',dur:0}));
+steps.push({atSec:last,type:'wait',label:'Última agitação · êmbolo em 30 s',dur:0});
+steps.push({atSec:T,type:'serve',label:'Pôr o êmbolo e pressionar'});
+steps.forEach((st,i)=>{if(st.dur!=null&&steps[i+1])st.dur=steps[i+1].atSec-st.atSec;});
+return steps;
+}
 
 /* ═══════════════════════════════════════════
    STATE & HELPERS
@@ -1914,9 +1961,9 @@ const recipeKey=()=>R?(R.key||R.id):null;
 /* Coaching determinístico — azedo/amargo = extração (moagem/temp); fraco/forte = concentração (dose/água).
    Como o app não controla a moagem, a dica vira instrução verbal para o moedor do usuário. */
 function coachingTip(a,sg){
-const p=[];
-if(a===0)p.push('🍋 Azedo → moa mais fino ou suba a temperatura');
-else if(a===2)p.push('🔥 Amargo → moa mais grosso ou baixe 2–3°C');
+const p=[],imm=!!(R&&R.steep);
+if(a===0)p.push(imm?'🍋 Azedo → 30 s a mais na próxima ou moa um pouco mais fino':'🍋 Azedo → moa mais fino ou suba a temperatura');
+else if(a===2)p.push(imm?'🔥 Amargo → 30 s a menos na próxima ou moa um pouco mais grosso':'🔥 Amargo → moa mais grosso ou baixe 2–3°C');
 if(sg===0)p.push('💪 Forte → reduza a dose ou aumente a água');
 else if(sg===2)p.push('☁️ Leve → aumente a dose ou reduza a água');
 return p.length?p.join(' · '):'✓ Equilibrado. Da próxima, repita igual.';
@@ -1979,7 +2026,7 @@ function saveBrew(){
 const key=recipeKey();if(!key)return;
 const s=loadStore();
 s.recipes=s.recipes||{};
-s.recipes[key]={dose:dose,ratio:R.ratio,ts:Date.now()};   // avaliação é anexada depois por rateBrew
+s.recipes[key]={dose:dose,ratio:R.ratio,...(R.steep?{steep:R.steepSec}:{}),ts:Date.now()};   // avaliação é anexada depois por rateBrew
 s.log=s.log||[];
 /* `water` é a água que PASSOU no café (no Flash Brew o rendimento inclui 40% de
    gelo que nunca toca a cama); `yield` guarda o rendimento quando difere.
@@ -2035,10 +2082,12 @@ const recs=loadStore().recipes||{};
 const rec=recs[recipeKey()];
 if(rec&&rec.acid!=null&&rec.strength!=null){
 const rl=(typeof rec.ratio==='number'&&isFinite(rec.ratio))?' · '+ratioLabel(rec.ratio):'';
-el.innerHTML=`<span class="sm-label">↻ Da última vez (${fmtDose(rec.dose)}${rl})</span><span class="sm-tip">${esc(rec.tip)}</span>`;
+const sl=(R&&R.steep&&isFinite(Number(rec.steep)))?' · '+fmtShort(Number(rec.steep)):'';
+el.innerHTML=`<span class="sm-label">↻ Da última vez (${fmtDose(rec.dose)}${rl}${sl})</span><span class="sm-tip">${esc(rec.tip)}</span>`;
 el.classList.add('show');
 }else if(rec&&rec.dose){
-el.innerHTML=`<span class="sm-label">↻ Última vez</span><span class="sm-tip">você usou ${fmtDose(rec.dose)} nesta receita.</span>`;
+const sl=(R&&R.steep&&isFinite(Number(rec.steep)))?' e '+fmtShort(Number(rec.steep)):'';
+el.innerHTML=`<span class="sm-label">↻ Última vez</span><span class="sm-tip">você usou ${fmtDose(rec.dose)}${sl} nesta receita.</span>`;
 el.classList.add('show');
 }else{el.classList.remove('show');el.innerHTML='';}
 }
@@ -2265,11 +2314,38 @@ i.value='';onSearch('');i.focus();
 function pickExtra(i){
 ensureAudio();wakeLockOn();
 R=JSON.parse(JSON.stringify(EXTRAS[i]));
+if(R.steep)prepareSteep();
 cameFromVariants=false;restoreDose();
 applyTimeScale();
 buildAccumCache();
 document.getElementById('s2-title').textContent=`✨ ${R.title}`;
 renderSetup();show('s-setup');
+}
+
+/* Imersão: abre no último tempo usado nesta receita (memória, revalidada contra a
+   faixa e o passo) ou no padrão; trocar o tempo refaz a agenda inteira. */
+function prepareSteep(){
+const st=R.steep,rec=((loadStore().recipes||{})[R.key||R.id])||{},v=Number(rec.steep);
+R.steepSec=(isFinite(v)&&v>=st.min&&v<=st.max&&(v-st.min)%st.step===0)?v:st.def;
+R.steps=steepSteps(R.steepSec,st.temp);
+}
+function setSteep(t){
+if(!R||!R.steep)return;
+const st=R.steep;
+if(t<st.min||t>st.max)return;
+R.steepSec=t;R.baseSteps=steepSteps(t,st.temp);
+recompute();vib(15);
+}
+function renderSteep(){
+const row=document.getElementById('steep-row');if(!row)return;
+if(!R.steep){row.hidden=true;return;}
+row.hidden=false;
+const st=R.steep,opts=[];
+for(let t=st.min;t<=st.max;t+=st.step)opts.push(t);
+document.getElementById('steep-presets').innerHTML=opts.map(t=>{
+const on=t===R.steepSec,m=Math.floor(t/60),sec=t%60;
+return `<button type="button" class="dose-preset${on?' on':''}" aria-pressed="${on}" aria-label="Infusão de ${m} minutos${sec?' e '+sec+' segundos':''}" onclick="setSteep(${t})">${fmtShort(t)}</button>`;
+}).join('');
 }
 
 /* ═══ KASUYA VARIANTS SCREEN ═══ */
@@ -2384,11 +2460,12 @@ const doseFactor=()=>(R&&R.designDose)?dose/R.designDose:1;
    declarado na interface quando ativo. */
 const SCALE_MIN=0.6,SCALE_MAX=2.2;
 const MIN_POUR_GAP=6;   // s · um humano não despeja e reposiciona a chaleira mais rápido
-const rawTimeFactor=()=>(R&&R.designDose&&timeScaleOn)?Math.pow(doseFactor(),TIME_EXP):1;
+/* imersão (R.steep): o tempo de contato é escolha da receita, não percolação */
+const rawTimeFactor=()=>(R&&R.designDose&&timeScaleOn&&!R.steep)?Math.pow(doseFactor(),TIME_EXP):1;
 const timeFactor=()=>Math.min(SCALE_MAX,Math.max(SCALE_MIN,rawTimeFactor()));
 const scaleIsClamped=()=>Math.abs(rawTimeFactor()-timeFactor())>1e-9;
 /* só vale falar em escala quando a dose realmente saiu do projeto */
-const scaleIsActive=()=>!!(R&&R.designDose&&Math.abs(doseFactor()-1)>0.02);
+const scaleIsActive=()=>!!(R&&R.designDose&&!R.steep&&Math.abs(doseFactor()-1)>0.02);
 const fmtDose=g=>String(g).replace('.',',')+' g';
 
 /* Fim do bloom = instante do SEGUNDO despejo. Não dá para usar base[1]:
@@ -2436,6 +2513,8 @@ document.getElementById('tscale-detail').innerHTML=timeScaleOn&&orig===now
    uma percolação. Então em vez de truncar o número, ele diz o que fazer. */
 function renderBrewWarn(){
 const el=document.getElementById('brew-warn');if(!el)return;
+/* os dois avisos (tempo acima do teto, volume acima do dripper) são de percolação */
+if(R.steep){el.hidden=true;return;}
 const total=R.steps[R.steps.length-1].atSec;
 /* Mede a água que PASSA no cone, não o rendimento: no Flash Brew 40% do
    rendimento é gelo na jarra e nunca toca a cama. E compara com o volume de
@@ -2504,7 +2583,8 @@ document.getElementById('time-val').textContent=fmtShort(last.atSec);
    (o preparo está passando do plano?). Compartilham as constantes 3:30 e 4:00,
    não o referencial: aqui compara-se o plano com o teto do corpus. */
 const tbox=document.getElementById('time-box');
-if(tbox)tbox.setAttribute('data-tstate',planLevel(last.atSec));
+/* os tetos de 3:30/4:00 são de coado: numa imersão longa o plano é sempre neutro */
+if(tbox)tbox.setAttribute('data-tstate',R.steep?'ok':planLevel(last.atSec));
 const pours=R.steps.filter(s=>s.type==='pour');
 document.getElementById('pours-count').textContent=`${pours.length} despejo${pours.length>1?'s':''} · ${ratioLabel(R.ratio)}`;
 
@@ -2512,7 +2592,8 @@ document.getElementById('pours-count').textContent=`${pours.length} despejo${pou
 const ed=document.getElementById('setup-edit'),sp=document.getElementById('setup-spacer');
 if(ed){ed.hidden=!R.isCustom;if(sp)sp.hidden=!!R.isCustom;}
 /* receitas do app: "Criar minha versão" (nas do usuário, o ✎ já resolve) */
-const cpb=document.getElementById('setup-copy');if(cpb)cpb.hidden=!!R.isCustom;
+/* imersão: o construtor não tem esse modelo (a cópia ganharia alerta de 4:00) */
+const cpb=document.getElementById('setup-copy');if(cpb)cpb.hidden=!!R.isCustom||!!R.steep;
 const nl=document.getElementById('recipe-note-label');
 if(nl)nl.textContent=R.isCustom?'Suas notas':'Sobre a receita';
 /* nota descritiva (só aparece quando a receita traz uma) */
@@ -2524,6 +2605,7 @@ else note.hidden=true;
 
 renderDosePresets();
 renderRatio();
+renderSteep();
 renderTimeScale();
 renderBrewWarn();
 renderTimeline();
@@ -2712,7 +2794,7 @@ const targetSec=()=>R&&R.steps?R.steps[R.steps.length-1].atSec:0;
 const GRACE_SEC=30;
 function timeState(el){
 const t=Math.floor(el),T=targetSec();   // mesmo truncamento do relógio na tela
-if(t>=RISK_SEC)return'risk';            // 4:00 vence tudo
+if(t>=RISK_SEC&&!(R&&R.steep))return'risk';   // 4:00 vence tudo (menos na imersão longa)
 if(t>T+GRACE_SEC)return'over';          // passou a folga de escoamento
 if(t>T)return'draining';                // escoando dentro do esperado
 return'ok';
@@ -2721,7 +2803,7 @@ function timerMetaText(el,st){
 const T=targetSec(),e=Math.floor(el),d=Math.abs(e-T);
 if(st==='risk')return e>T?`⚠ amargor · +${fmtShort(d)} do alvo`:`⚠ amargor · alvo ${fmtShort(T)}`;
 if(st==='over')return `alvo ${fmtShort(T)} · +${fmtShort(d)}`;
-if(st==='draining')return `escoando · +${fmtShort(d)}`;
+if(st==='draining')return `${R&&R.steep?'pressionando':'escoando'} · +${fmtShort(d)}`;
 if(e===T)return `alvo ${fmtShort(T)} · no alvo`;
 return `alvo ${fmtShort(T)} · faltam ${fmtShort(d)}`;
 }
@@ -2735,7 +2817,7 @@ top.setAttribute('data-frozen',frozen?'1':'0');
 const m=document.getElementById('brew-meta');
 if(m)m.textContent=frozen?`encerrado · alvo ${fmtShort(targetSec())}`:timerMetaText(el,st);
 const c=document.getElementById('brew-clock');
-const diz={risk:'risco de amargor',over:'passou do alvo',draining:'escoando após o alvo',ok:'dentro do alvo'};
+const diz={risk:'risco de amargor',over:'passou do alvo',draining:R&&R.steep?'pressionando o êmbolo':'escoando após o alvo',ok:'dentro do alvo'};
 if(c)c.setAttribute('aria-label',`Tempo decorrido, ${diz[st]}`);
 return st;
 }
@@ -2769,7 +2851,7 @@ const elapsed=(Date.now()-t0)/1000;
 document.getElementById('brew-clock').textContent=fmtMs(Date.now()-t0);
 /* camada de apresentação sobre o tempo REAL — não altera nenhum cálculo */
 applyTimeState(elapsed,false);
-if(elapsed>=RISK_SEC)announceRisk();
+if(elapsed>=RISK_SEC&&!R.steep)announceRisk();
 const steps=R.steps;
 let newIdx=0;
 for(let i=0;i<steps.length;i++){if(elapsed>=steps[i].atSec)newIdx=i;}
@@ -2905,7 +2987,7 @@ area.innerHTML=`<div class="step-serve">
 <div class="serve-icon" aria-hidden="true">☕</div>
 <div class="step-type">✓ PRONTO</div>
 <div class="step-name">${s.label}</div>
-<div class="step-sub" style="margin:8px 0 0">Toque em <b>Concluir</b> quando terminar de escoar</div>
+<div class="step-sub" style="margin:8px 0 0">Toque em <b>Concluir</b> quando ${R.steep?'o êmbolo chegar ao fim':'terminar de escoar'}</div>
 </div>`;
 /* finish é agendado de forma cancelável em onStepChange (C1/C2) */
 }
@@ -2936,12 +3018,12 @@ const bar=document.getElementById('next-bar');
 const ns=R.steps[curIdx+1];
 if(!ns){
 bar.className='next-bar';
-bar.innerHTML=`<div class="next-content"><span class="next-action" style="text-align:center;color:var(--text-dim)">${overtime?'⏳ Escoamento final — o relógio segue correndo':'Última etapa'}</span></div>`;
+bar.innerHTML=`<div class="next-content"><span class="next-action" style="text-align:center;color:var(--text-dim)">${overtime?(R.steep?'⏳ Pressionando — o relógio segue correndo':'⏳ Escoamento final — o relógio segue correndo'):'Última etapa'}</span></div>`;
 return;
 }
 let txt='';
 if(ns.type==='pour')txt=`☕ ${ns.label} · ${pourDispAt(curIdx+1)}ml · ${ns.temp}°C`;
-else if(ns.type==='serve')txt='✓ Servir';
+else if(ns.type==='serve')txt=R.steep?'✓ '+ns.label:'✓ Servir';
 else if(ns.type==='wait')txt=`⏱ ${ns.label}`;
 else if(ns.type==='drain')txt=`⬇ ${ns.label}`;
 else txt=ns.label;
