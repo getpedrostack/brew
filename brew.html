@@ -214,13 +214,6 @@ border-radius:20px;padding:32px 24px;text-align:center}
 .step-type{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
 .step-pour .step-type{color:var(--green)}
 .step-name{font-size:28px;font-weight:900;color:var(--text);margin-bottom:28px;letter-spacing:-.5px;line-height:1.2}
-.step-values{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-.value-box{background:var(--bg);border-radius:12px;padding:20px 16px}
-.value-label{font-size:11px;font-weight:800;color:var(--text-muted);
-text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.value-main{font-family:'JetBrains Mono',monospace;font-size:48px;font-weight:700;line-height:1;margin-bottom:4px}
-.step-pour .value-main{color:var(--green)}
-.value-unit{font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase}
 .step-progress{background:var(--border);height:8px;border-radius:4px;overflow:hidden;margin-bottom:16px}
 .step-progress-fill{height:100%;background:var(--green);transition:width .3s ease;border-radius:4px}
 /* Acumulado GRANDE (melhoria #3) */
@@ -228,9 +221,9 @@ text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 border:2px solid var(--border);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .accum-label{font-size:14px;font-weight:800;color:var(--text-muted);
 text-transform:uppercase;letter-spacing:4px;margin-bottom:4px}
-.accum-val{font-family:'JetBrains Mono',monospace;font-size:72px;font-weight:700;
+.accum-val{font-family:'JetBrains Mono',monospace;font-weight:700;
 color:var(--green);line-height:1}
-.accum-unit{font-size:28px;font-weight:700;color:var(--text-dim);margin-left:4px}
+.accum-unit{font-weight:700;color:var(--text-dim)}
 .accum-total{font-family:'JetBrains Mono',monospace;font-size:16px;
 font-weight:700;color:var(--text-muted);margin-top:4px}
 
@@ -593,16 +586,12 @@ box-shadow:var(--sh-lg);animation:stepIn .3s var(--ease) both}
 .step-name{font-size:26px;margin-bottom:22px}
 .step-sub{font-size:12.5px;font-weight:600;color:var(--text-muted);
 margin:-16px 0 20px;line-height:1.45}
-.value-box{border-radius:13px;padding:17px 12px;background:rgba(0,0,0,.32)}
-.value-main{font-size:44px;font-variant-numeric:tabular-nums}
 .step-progress{height:9px;border-radius:5px;margin-bottom:14px}
 .step-progress-fill{background:linear-gradient(90deg,var(--teal-deep),var(--green));
 transition:width .45s var(--ease)}
 .step-accum-big{padding:14px 18px;border-radius:13px;background:rgba(0,0,0,.34)}
 .accum-label{font-size:12px;letter-spacing:3.4px;margin-bottom:2px}
-.accum-val{font-size:62px;font-variant-numeric:tabular-nums}
-.accum-unit{font-size:24px}
-.accum-total{font-size:14px;margin-top:3px}
+.accum-val{font-variant-numeric:tabular-nums}
 /* SVG agora é responsivo (viewBox sem width/height fixos): a caixa pode
    encolher em telas baixas sem descentralizar o número em .ring-time */
 .countdown-ring{margin-bottom:20px}
@@ -665,7 +654,7 @@ padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px
 .ice-note,.stat-unit,.rc-tag{color:var(--text-dim)}
 /* Rótulos sobre caixas tintadas (--blue-bg, --surface) ficariam em 4,28:1
    mesmo com o tom novo — nesses usa-se o tom mais claro. */
-.stat-label,.next-label,.accum-label,.value-label{color:var(--text-dim)}
+.stat-label,.next-label,.accum-label{color:var(--text-dim)}
 
 /* ── Alvos de toque (WCAG 2.5.5: 44×44 CSS px) ──
    Chips e presets tinham 30px de altura. App usado com a mão molhada. */
@@ -720,7 +709,7 @@ box-shadow:0 6px 24px rgba(240,180,41,.4);animation:pulseBadge 1.6s ease-in-out 
 #s-brew.paused .next-bar{animation-play-state:paused}
 #s-brew.paused .serve-icon{animation-play-state:paused}
 #s-brew.paused .ring-fill{transition:none}
-#s-brew.paused .next-countdown,#s-brew.paused .next-action{opacity:.45}
+#s-brew.paused .next-countdown,#s-brew.paused .next-action,#s-brew.paused .next-temp{opacity:.45}
 
 /* ══ CONTROLE DE PROPORÇÃO ══ */
 .ratio-row{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
@@ -761,16 +750,8 @@ color:var(--text);min-width:118px;text-align:center;font-variant-numeric:tabular
 .step-type{font-size:11px;letter-spacing:1.8px;margin-bottom:7px}
 .step-name{font-size:21px;margin-bottom:14px}
 .step-sub{font-size:11.5px;margin:-10px 0 13px}
-.step-values{gap:11px;margin-bottom:13px}
-.value-box{padding:12px 10px;border-radius:11px}
-.value-label{font-size:10px;margin-bottom:5px}
-.value-main{font-size:34px}
 .step-progress{height:7px;margin-bottom:11px}
-.step-accum-big{padding:10px 14px}
 .accum-label{font-size:10px;letter-spacing:2.4px}
-.accum-val{font-size:44px}
-.accum-unit{font-size:18px}
-.accum-total{font-size:12px}
 .countdown-ring{width:126px;height:126px;margin-bottom:14px}
 .ring-time{font-size:36px}
 .serve-icon{font-size:50px;margin-bottom:14px}
@@ -794,17 +775,8 @@ color:var(--text);min-width:118px;text-align:center;font-variant-numeric:tabular
 .step-type{font-size:9.5px;letter-spacing:1.4px;margin-bottom:3px}
 .step-name{font-size:17px;margin-bottom:7px}
 .step-sub{font-size:10.5px;margin:-5px 0 7px}
-.step-values{gap:9px;margin-bottom:9px}
-.value-box{padding:8px}
-.value-label{font-size:9px;margin-bottom:3px}
-.value-main{font-size:26px}
-.value-unit{font-size:10px}
 .step-progress{height:6px;margin-bottom:8px}
-.step-accum-big{padding:6px 12px}
 .accum-label{font-size:9px;letter-spacing:2px;margin-bottom:0}
-.accum-val{font-size:28px}
-.accum-unit{font-size:14px}
-.accum-total{font-size:11px;margin-top:1px}
 .countdown-ring{width:96px;height:96px;margin-bottom:8px}
 .ring-time{font-size:28px}
 .serve-icon{font-size:34px;margin-bottom:8px}
@@ -1176,6 +1148,94 @@ border:2px solid var(--border)}
 .step-act .ring-fill{stroke:var(--green)}
 .step-act .ring-time{color:var(--green)}
 .step-act .step-sub{color:var(--text);font-weight:700}
+
+/* ═══ r04 · CARD DE DESPEJO ═══
+   Quem pesa pelo total acumulado lê UM número: "Balança até" é o principal e
+   ocupa o painel. O que este despejo acrescenta e o total da receita ficam
+   embaixo, com a barra em dois tons. A temperatura virou um selo: discreto
+   quando repete a do despejo anterior (130 de 135 despejos do app), claro e
+   cheio quando muda. O selo não usa âmbar nem vermelho: essas cores são só da
+   escada do tempo (regra da r01). */
+.pour-head{min-width:0}
+.pour-head .step-name{margin-bottom:6px}
+.pour-head .step-sub{margin:0 0 4px}
+.temp-chip{display:flex;align-items:center;gap:.36em;width:-moz-fit-content;width:fit-content;max-width:100%;
+font-size:13.5px;font-weight:700;line-height:1;white-space:nowrap;
+padding:7px 13px;border-radius:999px;color:var(--text-dim);
+background:rgba(0,0,0,.34);border:1px solid rgba(246,241,234,.1)}
+.tc-val{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.temp-chip.changed{color:#14100c;background:var(--text);border-color:var(--text);
+font-size:14px;font-weight:800;box-shadow:0 4px 16px rgba(246,241,234,.2)}
+.temp-chip .tc-prev{font-weight:600;opacity:.76}
+.pour-head .temp-chip{margin:8px auto 16px}
+
+/* o alvo da balança: tamanho ideal pela largura; fitPourCard() só encolhe o
+   número (--accum-k) quando o card não cabe na área */
+.step-pour{--accum-fs:clamp(64px,24.6vw,112px)}
+.step-pour .step-accum-big{margin-top:0;padding:15px 18px 14px}
+.accum-row{display:flex;align-items:baseline;justify-content:center;white-space:nowrap;
+font-size:calc(var(--accum-fs)*var(--accum-k,1));line-height:.92;margin-top:4px}
+.accum-val{font-size:1em;letter-spacing:-.025em}
+.accum-unit{font-size:.3em;margin-left:.16em}
+.step-accum-big .step-progress{margin:13px 0 11px}
+.accum-add{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;
+color:var(--text-dim);font-variant-numeric:tabular-nums}
+.accum-add b{color:var(--text);font-weight:800}
+.step-pour .accum-total{color:var(--text-dim);font-size:13px;margin-top:4px}
+
+/* barra "A seguir": o alvo da balança nunca some por reticências — quem
+   encolhe é o nome do despejo. A troca de temperatura ganha uma linha própria. */
+.next-action.na-pour{display:flex;align-items:baseline;gap:.32em;min-width:0}
+.na-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.na-amt{flex-shrink:0;white-space:nowrap}
+.next-content.has-temp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+column-gap:12px;row-gap:7px;align-items:center}
+.next-content.has-temp .next-label{grid-column:1;grid-row:1}
+.next-content.has-temp .next-action{grid-column:2;grid-row:1}
+.next-content.has-temp .next-countdown{grid-column:3;grid-row:1}
+.next-content.has-temp .next-temp{grid-column:2;grid-row:2;justify-self:start}
+.temp-chip.changed.next-temp{font-size:12px;padding:5px 10px;box-shadow:none}
+/* 320 px: sem o ícone e com menos respiro, "2º Despejo · até 500 ml" cabe inteiro */
+@media (max-width:340px){
+.next-content.is-pour{gap:8px}
+.next-content.is-pour.has-temp{column-gap:8px}
+.na-ic{display:none}
+}
+/* com largura sobrando (paisagem, tablet), o selo cabe na mesma linha */
+@media (min-width:560px){
+.next-content.has-temp{display:flex}
+.next-content.has-temp .next-action{flex:0 1 auto}
+.next-content.has-temp .next-countdown{margin-left:auto}
+}
+
+@media (max-height:700px){
+.pour-head .step-name{margin-bottom:4px}
+.pour-head .step-sub{margin:0 0 3px}
+.temp-chip{font-size:12.5px;padding:6px 11px}
+.temp-chip.changed{font-size:13px}
+.pour-head .temp-chip{margin:6px auto 12px}
+.step-pour .step-accum-big{padding:11px 14px 10px}
+.step-accum-big .step-progress{margin:10px 0 9px}
+.accum-add{font-size:13.5px}
+.step-pour .accum-total{font-size:12px;margin-top:3px}
+}
+/* paisagem baixa: duas colunas — o que fazer à esquerda, a balança à direita.
+   Em uma coluna só o card nunca coube (na v13, rolava em toda receita). */
+@media (orientation:landscape) and (max-height:520px){
+.step-pour{--accum-fs:clamp(44px,21vh,84px);display:grid;
+grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);column-gap:16px;align-items:center}
+.pour-head .step-name{margin-bottom:3px}
+.pour-head .step-sub{margin:0 0 2px}
+.temp-chip{font-size:11px;padding:5px 10px}
+.temp-chip.changed{font-size:12px}
+.pour-head .temp-chip{margin:5px auto 0}
+.step-pour .step-accum-big{padding:7px 12px}
+.accum-row{margin-top:1px}
+.step-accum-big .step-progress{margin:7px 0 6px}
+.accum-add{font-size:11.5px}
+.step-pour .accum-total{font-size:10.5px;margin-top:1px}
+.temp-chip.changed.next-temp{font-size:11px;padding:4px 9px}
+}
 
 /* ═══ v7 · CÓPIA DE RECEITA ("Criar minha versão") ═══
    Mesma peça do convite "Criar receita" da lista, no fim da tabela de despejos:
@@ -2712,6 +2772,7 @@ buildDots();
 renderStep(0);          // 1º pour renderizado em silêncio: o beep "DESPEJE!" do countdown é a deixa
 updateDots();
 buildNextBar();
+fitPourCard();          // depois da barra: a altura dela muda a área do card
 clearInterval(ticker);
 ticker=setInterval(brewTick,80);
 }
@@ -2902,6 +2963,7 @@ overtime=true;
 renderBrewButtons();
 buildNextBar();
 }
+fitPourCard();          // depois da barra: a altura dela muda a área do card
 }
 
 /* ═══ PROGRESS DOTS ═══ */
@@ -2924,6 +2986,52 @@ if(i===curIdx)d.classList.add('active');
 });
 }
 
+/* ═══ SELO DE TEMPERATURA ═══
+   Compara com o DESPEJO anterior (esperas no meio não contam). Igual: selo
+   discreto, só no card. Diferente: selo claro com a seta e o valor anterior —
+   no card e, um passo antes, na barra "A seguir", que é quando ainda dá tempo
+   de trocar a chaleira. Na barra, sem mudança não há selo. */
+function prevPourTemp(idx){
+for(let i=idx-1;i>=0;i--)if(R.steps[i].type==='pour')return R.steps[i].temp;
+return null;
+}
+function tempChipHTML(idx,inBar){
+const t=R.steps[idx].temp,p=prevPourTemp(idx);
+if(p==null||p===t)return inBar?'':`<div class="temp-chip"><span class="sr-only">Água a </span><span class="tc-val">${t}°C</span></div>`;
+const tag=inBar?'span':'div';
+return `<${tag} class="temp-chip changed${inBar?' next-temp':''}"><span class="sr-only">${inBar?', a temperatura muda para ':'Nova temperatura: '}</span><span aria-hidden="true">${t<p?'↓':'↑'} </span><span class="tc-val">${t}°C</span><span class="tc-prev"> · antes ${p}</span></${tag}>`;
+}
+
+/* ═══ AJUSTE DO ALVO AO ESPAÇO ═══
+   O CSS desenha o alvo da balança no tamanho ideal para a largura da tela. Se
+   o card não couber na área do passo (tela baixa, nota longa, faixa de aviso,
+   4 dígitos), só o número encolhe, de 6 em 6%, até caber ou chegar a 40 px —
+   o resto do card não muda de tamanho. Roda ao trocar de passo e sempre que a
+   área muda de tamanho. É só apresentação: não lê nem altera nada do motor. */
+const FIT_MIN_PX=40;
+function fitPourCard(){
+const area=document.getElementById('step-area');
+const card=area&&area.querySelector('.step-pour');
+const row=card&&card.querySelector('.accum-row');
+if(!row)return;
+card.style.removeProperty('--accum-k');
+const cs=getComputedStyle(area);
+const avail=area.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+const base=parseFloat(getComputedStyle(row).fontSize);
+if(!(avail>0)||!(base>0))return;   // tela ainda sem layout
+const kMin=Math.min(1,FIT_MIN_PX/base);
+let k=1;
+while(k>kMin&&(card.offsetHeight>avail+.5||row.scrollWidth>row.clientWidth+.5)){
+k=Math.max(kMin,k-.06);
+card.style.setProperty('--accum-k',k.toFixed(3));
+}
+}
+/* a área muda de tamanho com a rotação da tela, a faixa de aviso e a 2ª linha
+   da barra "A seguir"; as fontes também chegam depois do primeiro desenho */
+if('ResizeObserver' in window)new ResizeObserver(()=>fitPourCard()).observe(document.getElementById('step-area'));
+else window.addEventListener('resize',fitPourCard);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitPourCard);
+
 /* ═══ RENDER STEP ═══ */
 function renderStep(idx){
 const s=R.steps[idx];
@@ -2938,29 +3046,24 @@ const before=idx>0?accumDispAt(idx-1):0;
    despejo acrescenta. Antes a barra já mostrava o despejo como feito. */
 const pctBefore=tw>0?Math.min(100,before/tw*100):0;
 const pctNow=tw>0?Math.min(100,acc/tw*100):0;
+/* r04: o alvo da balança é o número do card. O que este despejo acrescenta
+   fica embaixo (no 1º despejo seria o mesmo número, então some) e a
+   temperatura é um selo, destacado só quando muda. */
 area.innerHTML=`<div class="step-pour">
+<div class="pour-head">
 <div class="step-type">☕ DESPEJE AGORA</div>
 <div class="step-name">${s.label}</div>
 ${s.note?`<div class="step-sub">${s.note}</div>`:''}
-<div class="step-values">
-<div class="value-box">
-<div class="value-label">Adicionar</div>
-<div class="value-main">${ml}</div>
-<div class="value-unit">ml</div>
+${tempChipHTML(idx,false)}
 </div>
-<div class="value-box">
-<div class="value-label">Temperatura</div>
-<div class="value-main">${s.temp}°</div>
-<div class="value-unit">C</div>
-</div>
-</div>
+<div class="step-accum-big">
+<div class="accum-label">BALANÇA ATÉ</div>
+<div class="accum-row"><span class="accum-val">${acc}</span><span class="accum-unit">ml</span></div>
 <div class="step-progress" role="img" aria-label="${before} de ${tw} ml na jarra; este despejo leva a ${acc}">
 <div class="step-progress-add" style="width:${pctNow}%"></div>
 <div class="step-progress-fill" style="width:${pctBefore}%"></div>
 </div>
-<div class="step-accum-big">
-<div class="accum-label">BALANÇA ATÉ</div>
-<div><span class="accum-val">${acc}</span><span class="accum-unit">ml</span></div>
+${before>0?`<div class="accum-add"><b>+${ml} ml</b> neste despejo</div>`:''}
 <div class="accum-total">de ${tw} ml no total</div>
 </div>
 </div>`;
@@ -3039,16 +3142,22 @@ bar.className='next-bar';
 bar.innerHTML=`<div class="next-content"><span class="next-action" style="text-align:center;color:var(--text-dim)">${overtime?(R.steep?'✂ Separe a AeroPress e toque em Concluir':'⏳ Escoamento final — o relógio segue correndo'):'Última etapa'}</span></div>`;
 return;
 }
-let txt='';
-if(ns.type==='pour')txt=`☕ ${ns.label} · ${pourDispAt(curIdx+1)}ml · ${ns.temp}°C`;
+let txt='',cls='next-action',chip='';
+if(ns.type==='pour'){
+/* r04: o mesmo alvo do card (balança até), não o volume do despejo; a
+   temperatura só aparece quando vai mudar */
+cls+=' na-pour';
+txt=`<span class="na-name"><span class="na-ic" aria-hidden="true">☕ </span>${ns.label}</span><span class="na-amt"> · até ${accumDispAt(curIdx+1)} ml</span>`;
+chip=tempChipHTML(curIdx+1,true);
+}
 else if(ns.type==='serve')txt=R.steep?`${ns.icon||'✓'} ${ns.label}`:'✓ Servir';
 else if(ns.type==='wait')txt=`${ns.icon||'⏱'} ${ns.label}`;
 else if(ns.type==='drain')txt=`⬇ ${ns.label}`;
 else txt=ns.label;
 bar.className='next-bar';
-bar.innerHTML=`<div class="next-content">
+bar.innerHTML=`<div class="next-content${ns.type==='pour'?' is-pour':''}${chip?' has-temp':''}">
 <span class="next-label">A seguir</span>
-<span class="next-action">${txt}</span>
+<span class="${cls}">${txt}</span>${chip}
 <span class="next-countdown" id="next-cd">—</span>
 </div>`;
 }
