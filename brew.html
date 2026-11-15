@@ -230,19 +230,26 @@ font-weight:700;color:var(--text-muted);margin-top:4px}
 .step-wait{width:100%;background:var(--blue-bg);border:3px solid var(--blue);
 border-radius:20px;padding:32px 24px;text-align:center}
 .step-wait .step-type{color:var(--blue)}
-.countdown-ring{width:180px;height:180px;margin:0 auto 24px;position:relative}
+/* r05: o anel é o conteúdo do passo. O CSS o desenha pela largura da tela
+   (--ring) e o número acompanha o anel, a 23% do diâmetro, sempre dentro do
+   traço: com os tamanhos fixos de antes, o "00:20" encostava no anel em todas
+   as telas. Se o card não couber, fitRingCard() encolhe só o anel (--ring-k). */
+.countdown-ring{--ring:clamp(126px,70vw,280px);width:calc(var(--ring)*var(--ring-k,1));
+height:calc(var(--ring)*var(--ring-k,1));margin:0 auto 24px;position:relative}
 .countdown-ring svg{transform:rotate(-90deg)}
 .ring-bg{fill:none;stroke:var(--border);stroke-width:12}
 .ring-fill{fill:none;stroke:var(--blue);stroke-width:12;stroke-linecap:round;
 transition:stroke-dashoffset 1s linear}
 .ring-time{position:absolute;inset:0;display:flex;align-items:center;
-justify-content:center;font-family:'JetBrains Mono',monospace;font-size:56px;
+justify-content:center;font-family:'JetBrains Mono',monospace;font-size:calc(var(--ring)*var(--ring-k,1)*.23);
 font-weight:700;color:var(--blue)}
 .step-drain{width:100%;background:var(--surface);border:3px solid var(--border);
 border-radius:20px;padding:32px 24px;text-align:center}
 .step-drain .step-type{color:var(--text-dim)}
-.step-drain .ring-fill{stroke:var(--text-dim)}
-.step-drain .ring-time{color:var(--text-dim)}
+/* r05: anel e número no tom do texto; o cinza apagado fazia do anel o item
+   menos visível do passo. Neutros: âmbar e vermelho são do tempo, verde é ação. */
+.step-drain .ring-fill{stroke:var(--text)}
+.step-drain .ring-time{color:var(--text)}
 .step-serve{width:100%;background:var(--green-bg);border:3px solid var(--green);
 border-radius:20px;padding:32px 24px;text-align:center}
 .step-serve .step-type{color:var(--green)}
@@ -596,7 +603,7 @@ transition:width .45s var(--ease)}
    encolher em telas baixas sem descentralizar o número em .ring-time */
 .countdown-ring{margin-bottom:20px}
 .countdown-ring svg{display:block;width:100%;height:100%}
-.ring-time{font-size:50px;font-variant-numeric:tabular-nums}
+.ring-time{font-variant-numeric:tabular-nums}
 
 /* ══ FINISH ══ */
 .finish-btn{background:linear-gradient(135deg,var(--green),#38b5a5);
@@ -752,8 +759,7 @@ color:var(--text);min-width:118px;text-align:center;font-variant-numeric:tabular
 .step-sub{font-size:11.5px;margin:-10px 0 13px}
 .step-progress{height:7px;margin-bottom:11px}
 .accum-label{font-size:10px;letter-spacing:2.4px}
-.countdown-ring{width:126px;height:126px;margin-bottom:14px}
-.ring-time{font-size:36px}
+.countdown-ring{margin-bottom:14px}
 .serve-icon{font-size:50px;margin-bottom:14px}
 .brew-actions{padding:9px 16px calc(10px + env(safe-area-inset-bottom))}
 .brew-btn{min-height:48px;font-size:14px}
@@ -777,8 +783,15 @@ color:var(--text);min-width:118px;text-align:center;font-variant-numeric:tabular
 .step-sub{font-size:10.5px;margin:-5px 0 7px}
 .step-progress{height:6px;margin-bottom:8px}
 .accum-label{font-size:9px;letter-spacing:2px;margin-bottom:0}
-.countdown-ring{width:96px;height:96px;margin-bottom:8px}
-.ring-time{font-size:28px}
+/* r05: espera e drenagem em duas colunas, como o card de despejo — o que fazer
+   à esquerda, o anel à direita, medido pela altura. Em uma coluna o card não
+   cabia em 568×320. As linhas 1fr centram o texto na altura do anel. */
+.step-wait,.step-drain{display:grid;grid-template-columns:minmax(0,1fr) auto;
+grid-template-rows:1fr auto auto auto 1fr;column-gap:20px;align-items:center}
+.step-wait>.step-type,.step-drain>.step-type{grid-column:1;grid-row:2}
+.step-wait>.step-name,.step-drain>.step-name{grid-column:1;grid-row:3}
+.step-wait>.step-sub{grid-column:1;grid-row:4}
+.countdown-ring{--ring:clamp(96px,48vh,200px);grid-column:2;grid-row:1/-1;margin:0}
 .serve-icon{font-size:34px;margin-bottom:8px}
 .brew-actions{padding:7px 14px calc(8px + env(safe-area-inset-bottom))}
 .brew-btn{min-height:44px;font-size:13px}
@@ -2772,7 +2785,7 @@ buildDots();
 renderStep(0);          // 1º pour renderizado em silêncio: o beep "DESPEJE!" do countdown é a deixa
 updateDots();
 buildNextBar();
-fitPourCard();          // depois da barra: a altura dela muda a área do card
+fitPourCard();fitRingCard();   // depois da barra: a altura dela muda a área do card
 clearInterval(ticker);
 ticker=setInterval(brewTick,80);
 }
@@ -2963,7 +2976,7 @@ overtime=true;
 renderBrewButtons();
 buildNextBar();
 }
-fitPourCard();          // depois da barra: a altura dela muda a área do card
+fitPourCard();fitRingCard();   // depois da barra: a altura dela muda a área do card
 }
 
 /* ═══ PROGRESS DOTS ═══ */
@@ -3026,11 +3039,28 @@ k=Math.max(kMin,k-.06);
 card.style.setProperty('--accum-k',k.toFixed(3));
 }
 }
+/* r05 · o mesmo para a espera e a drenagem: se o card não couber na área,
+   só o anel (com o número dentro) encolhe, até RING_MIN_PX. Conta direta: o
+   anel é o único item do card que muda de altura. Só apresentação. */
+const RING_MIN_PX=96;
+function fitRingCard(){
+const area=document.getElementById('step-area');
+const card=area&&area.querySelector('.step-wait,.step-drain');
+const ring=card&&card.querySelector('.countdown-ring');
+if(!ring)return;
+card.style.removeProperty('--ring-k');
+const cs=getComputedStyle(area);
+const avail=area.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+const size=ring.offsetHeight,over=card.offsetHeight-avail;
+if(!(avail>0)||!(size>0)||over<=0)return;
+const k=Math.max(Math.min(1,RING_MIN_PX/size),Math.floor((size-over)/size*1000)/1000);
+card.style.setProperty('--ring-k',k.toFixed(3));
+}
 /* a área muda de tamanho com a rotação da tela, a faixa de aviso e a 2ª linha
    da barra "A seguir"; as fontes também chegam depois do primeiro desenho */
-if('ResizeObserver' in window)new ResizeObserver(()=>fitPourCard()).observe(document.getElementById('step-area'));
-else window.addEventListener('resize',fitPourCard);
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitPourCard);
+if('ResizeObserver' in window)new ResizeObserver(()=>{fitPourCard();fitRingCard();}).observe(document.getElementById('step-area'));
+else window.addEventListener('resize',()=>{fitPourCard();fitRingCard();});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{fitPourCard();fitRingCard();});
 
 /* ═══ RENDER STEP ═══ */
 function renderStep(idx){
