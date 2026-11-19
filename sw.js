@@ -1,12 +1,14 @@
 /* Service worker — app shell offline, amigável a updates. Só ativa em http(s). */
-const CACHE = 'wbrc-shell-v22';
+const CACHE = 'wbrc-shell-v23';
 const ASSETS = [
   './brew.html',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './icon-180.png',
-  './icon-32.png'
+  './icon-32.png',
+  './icon-original-192.png',
+  './icon-original-512.png'
 ];
 
 self.addEventListener('install', e => {
