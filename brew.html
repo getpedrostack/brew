@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="WBrC Timer">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="Timer automático para receitas campeãs do World Brewers Cup 2015–2026 e extras (como o método de 10 despejos do Tetsu Kasuya), com despejos guiados, contagem regressiva e dose ajustável.">
-<meta name="theme-color" content="#0c0a08">
+<meta name="theme-color" content="#0a1c20">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -18,23 +18,25 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-/* Paleta Original Coffee Roaster — alinhada à suíte (triang/PWR): teal primária, terracota quente, creme; espresso escuro */
---bg:#0c0a08;--surface:#1a1611;--border:#2b251e;--text:#f6f1ea;--text-dim:#a99d8d;--green:#2a9d8f;--green-bg:#0e211e;--yellow:#f0b429;
---yellow-bg:#1f1606;--red:#df6f54;--red-bg:#2a1610;--blue:#e0975c;--blue-bg:#291a10;
+/* Paleta Original Coffee Roaster (medida nos logos): petróleo #104a53, café #5d3007, cobre #ba744d, caramelo #da9c5e,
+   pêssego #fad9b8. Fundos derivados do petróleo, como no Triângulo OCR; texto ≥ 4,5:1 conferido. */
+--brand-petroleo:#104a53;--brand-cafe:#5d3007;--brand-cobre:#ba744d;--brand-caramelo:#da9c5e;--brand-pessego:#fad9b8;
+--bg:#0a1c20;--surface:#0f272c;--border:#23474f;--text:#f7efe6;--text-dim:#b3c0be;--green:#5bb8bd;--green-bg:#0f3036;--yellow:#f0b429;
+--yellow-bg:#1f1606;--red:#df6f54;--red-bg:#2a1610;--blue:#da9c5e;--blue-bg:#2b2216;
 --gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;
---cream:#f0dcc0;--teal-deep:#15564f;--terra:#a85b34;
+--cream:#fad9b8;--teal-deep:#104a53;--terra:#ba744d;
 --ease:cubic-bezier(.22,.61,.36,1);
 --sh-sm:0 1px 3px rgba(0,0,0,.4);
 --sh-md:0 8px 28px rgba(0,0,0,.45);
 --sh-lg:0 18px 52px rgba(0,0,0,.6);
---surface-2:#221c15;
---ice:#5aa9c9;--ice-bg:#0e1e26;
---glow-green:0 0 0 3px rgba(42,157,143,.18)}
+--surface-2:#14323a;
+--ice:#8ec5ec;--ice-bg:#10283a;
+--glow-green:0 0 0 3px rgba(91,184,189,.18)}
 body{font-family:'Inter',sans-serif;color:var(--text);
 height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;
 background:
-radial-gradient(1100px 520px at 50% -12%,#1b140d 0%,transparent 62%),
-radial-gradient(700px 380px at 100% 105%,#15100a 0%,transparent 60%),
+radial-gradient(1100px 520px at 50% -12%,#12343b 0%,transparent 62%),
+radial-gradient(700px 380px at 100% 105%,#0d262b 0%,transparent 60%),
 var(--bg)}
 
 /* ══ ACESSIBILIDADE ══ */
@@ -81,14 +83,20 @@ cursor:pointer;font-family:inherit;border:2px solid transparent}
 /* ══ HEADER ══ */
 .s1-top{flex-shrink:0;
 padding:max(20px,env(safe-area-inset-top)) 20px 14px;
-background:linear-gradient(180deg,rgba(26,22,17,.85),rgba(12,10,8,0));
+background:linear-gradient(180deg,rgba(15,39,44,.85),rgba(10,28,32,0));
 border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
-.s1-brand{display:inline-flex;align-items:center;gap:8px;
-background:linear-gradient(135deg,var(--terra),var(--green));
+/* selo da torrefação: escudo vetorial (redesenho medido do logo) sobre café, contorno cobre */
+.s1-brand{display:inline-flex;align-items:center;gap:9px;
+background:var(--brand-cafe);border:1px solid var(--terra);
 border-radius:20px;text-decoration:none;
-margin-bottom:14px;box-shadow:0 2px 14px rgba(168,91,52,.35)}
-.s1-brand-icon{font-size:16px}
-.s1-brand-text{font-size:12px;font-weight:800;color:#fff;letter-spacing:.3px}
+margin-bottom:14px;box-shadow:0 2px 14px rgba(186,116,77,.25)}
+.s1-escudo{width:17px;height:auto;flex:0 0 auto;display:block}
+.s1-brand-text{font-size:12px;font-weight:800;color:var(--brand-pessego);letter-spacing:.3px}
+/* fundo do cabeçalho: círculos concêntricos da linguagem op-art da marca (ondas na xícara), quase invisíveis */
+.s1-top{position:relative;overflow:hidden}
+.s1-top::after{content:"";position:absolute;right:-70px;top:-60px;width:260px;height:260px;pointer-events:none;opacity:.08;z-index:0;
+background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260' fill='none' stroke='%23fad9b8' stroke-width='1.6'%3E%3Ccircle cx='130' cy='130' r='12'/%3E%3Ccircle cx='130' cy='130' r='24'/%3E%3Ccircle cx='130' cy='130' r='36'/%3E%3Ccircle cx='130' cy='130' r='48'/%3E%3Ccircle cx='130' cy='130' r='60'/%3E%3Ccircle cx='130' cy='130' r='72'/%3E%3Ccircle cx='130' cy='130' r='84'/%3E%3Ccircle cx='130' cy='130' r='96'/%3E%3Ccircle cx='130' cy='130' r='108'/%3E%3Ccircle cx='130' cy='130' r='120'/%3E%3Cpath d='M0 130 H260'/%3E%3C/svg%3E") center/contain no-repeat}
+.s1-top > *{position:relative;z-index:1}
 .s1-title{font-weight:900;color:var(--text);
 font-size:27px;letter-spacing:-.9px;margin-bottom:3px;
 background:linear-gradient(120deg,var(--text) 20%,var(--cream) 90%);
@@ -123,15 +131,17 @@ font-size:23px}
 .rc-flag{flex-shrink:0;
 font-size:22px;opacity:.9}
 .rc-info{display:block;flex:1;min-width:0}
-.rc-name{display:block;font-weight:800;color:var(--text);
-white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+/* o nome é o que identifica o cartão: quebra em até 2 linhas em vez de virar
+   reticências (em 320 px, 13 campeões perdiam o sobrenome — «Alessandro …») */
+.rc-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+font-weight:800;color:var(--text);overflow:hidden;overflow-wrap:anywhere;
 font-size:15.5px;letter-spacing:-.35px}
 .rc-method{display:block;font-weight:600;
 font-size:11px;color:var(--text-muted);margin-top:2px}
 .rc-ratio{font-family:'JetBrains Mono',monospace;font-weight:700;color:#fff;border-radius:10px;
 flex-shrink:0;align-self:flex-start;margin-top:2px;white-space:nowrap;
 font-size:10px;padding:3px 9px;background:var(--teal-deep);
-box-shadow:inset 0 0 0 1px rgba(42,157,143,.55)}
+box-shadow:inset 0 0 0 1px rgba(91,184,189,.55)}
 .rc-variant-hint{display:block;font-weight:700;color:var(--green);
 padding-left:34px;margin-top:9px;padding-top:9px;
 border-top:1px solid rgba(255,255,255,.05);font-size:11px}
@@ -142,7 +152,7 @@ border-top:1px solid rgba(255,255,255,.05);font-size:11px}
 .var-card{display:block;width:100%;text-align:left;font-family:inherit;color:inherit;border:2px solid var(--border);margin-bottom:10px;cursor:pointer;transition:transform .15s,border-color .15s,background .15s;
 border-radius:14px;padding:15px;
 background:linear-gradient(155deg,var(--surface-2) 0%,var(--surface) 62%);box-shadow:var(--sh-sm)}
-.var-card:active{border-color:var(--green);background:#151515}
+.var-card:active{border-color:var(--green);background:#0c2328}
 .var-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .var-name{font-size:16px;font-weight:800}
 .var-emoji{font-size:18px}
@@ -154,7 +164,7 @@ padding:3px 10px;border-radius:6px;margin-bottom:6px}
 /* ══ NAV BAR ══ */
 .s2-nav{display:flex;align-items:center;
 border-bottom:1px solid var(--border);flex-shrink:0;
-background:linear-gradient(180deg,rgba(26,22,17,.8),rgba(12,10,8,0));
+background:linear-gradient(180deg,rgba(15,39,44,.8),rgba(10,28,32,0));
 backdrop-filter:blur(10px);padding:max(18px,env(safe-area-inset-top)) 20px 16px}
 .back-btn{background:var(--surface);
 border:2px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;
@@ -217,15 +227,15 @@ font-size:14px}
 .start-btn{position:fixed;bottom:max(24px,env(safe-area-inset-bottom));left:20px;right:20px;border:none;color:#000;font-weight:900;letter-spacing:.5px;cursor:pointer;
 font-family:inherit;
 height:66px;border-radius:17px;font-size:18px;
-background:linear-gradient(135deg,var(--green),#38b5a5);
-box-shadow:0 10px 34px rgba(42,157,143,.38);
+background:linear-gradient(135deg,var(--green),#86d0d3);
+box-shadow:0 10px 34px rgba(91,184,189,.38);
 transition:transform .14s var(--ease),box-shadow .14s var(--ease)}
-.start-btn:active{transform:translateY(2px);box-shadow:0 4px 16px rgba(42,157,143,.4)}
+.start-btn:active{transform:translateY(2px);box-shadow:0 4px 16px rgba(91,184,189,.4)}
 
 /* ══ BREW SCREEN ══ */
 .s3-top{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;
 padding:16px 18px;
-background:linear-gradient(180deg,rgba(26,22,17,.7),rgba(12,10,8,0))}
+background:linear-gradient(180deg,rgba(15,39,44,.7),rgba(10,28,32,0))}
 .timer-clock{font-family:'JetBrains Mono',monospace;
 font-weight:700;color:var(--text);
 font-size:30px;letter-spacing:1.5px;flex-shrink:0;font-variant-numeric:tabular-nums}
@@ -269,7 +279,7 @@ padding:20px 18px}
 /* ══ STEP CARDS ══ */
 .step-pour{width:100%;border:3px solid var(--green);
 border-radius:20px;padding:32px 24px;text-align:center;
-background:linear-gradient(160deg,#123029 0%,var(--green-bg) 70%)}
+background:linear-gradient(160deg,#154049 0%,var(--green-bg) 70%)}
 .step-type{font-weight:900;text-transform:uppercase;
 font-size:13px;letter-spacing:2.2px;margin-bottom:10px}
 .step-pour .step-type{color:var(--green)}
@@ -354,8 +364,8 @@ font-weight:700;color:var(--green);margin-bottom:12px}
 .finish-btn{width:100%;max-width:320px;height:64px;
 border:none;border-radius:16px;color:#000;font-size:18px;font-weight:900;
 cursor:pointer;font-family:inherit;
-background:linear-gradient(135deg,var(--green),#38b5a5);
-box-shadow:0 10px 32px rgba(42,157,143,.35)}
+background:linear-gradient(135deg,var(--green),#86d0d3);
+box-shadow:0 10px 32px rgba(91,184,189,.35)}
 /* ══ AVALIAÇÃO DE 2 EIXOS (finish) ══ */
 .finish-rate-label{font-size:12px;font-weight:800;color:var(--text-dim);
 text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
@@ -369,8 +379,8 @@ letter-spacing:.3px;align-self:center;text-align:right;padding-right:6px;line-he
 .rate-cell{aspect-ratio:1;min-height:46px;background:var(--surface);border:2px solid var(--border);
 border-radius:10px;cursor:pointer;font-family:inherit;transition:transform .1s,border-color .15s,background .15s}
 .rate-cell:active{transform:scale(.93)}
-.rate-cell.ideal{border-color:var(--teal-deep);background:#0e211e}
-.rate-cell.sel{border-color:var(--green);background:var(--green);box-shadow:0 0 0 3px rgba(42,157,143,.25)}
+.rate-cell.ideal{border-color:var(--teal-deep);background:#0f3036}
+.rate-cell.sel{border-color:var(--green);background:var(--green);box-shadow:0 0 0 3px rgba(91,184,189,.25)}
 .finish-tip{font-size:14px;font-weight:700;color:var(--green);line-height:1.45;
 text-align:center;max-height:0;opacity:0;overflow:hidden;transition:max-height .25s,opacity .25s,margin .25s}
 .finish-tip.show{max-height:140px;opacity:1;margin-bottom:22px}
@@ -436,9 +446,9 @@ border:1.5px solid var(--border);color:var(--text-dim);font-family:inherit;
 font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
 transition:background .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
 .chip:active{transform:scale(.95)}
-.chip.on{background:var(--green);border-color:var(--green);color:#04201d}
+.chip.on{background:var(--green);border-color:var(--green);color:#04181b}
 .chip.chip-new{border-color:var(--terra);}
-.chip.chip-new.on{background:var(--terra);border-color:var(--terra);color:#fff}
+.chip.chip-new.on{background:var(--terra);border-color:var(--terra);color:#1a0e06}
 
 /* ══ LISTA ══ */
 .year-group{margin-bottom:22px}
@@ -447,7 +457,7 @@ letter-spacing:.6px;text-transform:uppercase;color:var(--text-muted);opacity:.75
 
 /* ══ CARD DE RECEITA ══ */
 .recipe-card:active{transform:scale(.982);border-color:var(--green);
-background:linear-gradient(155deg,#241d15 0%,#171310 62%);box-shadow:var(--sh-md)}
+background:linear-gradient(155deg,#163840 0%,#0f272c 62%);box-shadow:var(--sh-md)}
 /* linha de metadados */
 .rc-meta{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:9px;
 padding-left:34px;border-top:1px solid rgba(255,255,255,.05);flex-wrap:wrap}
@@ -465,13 +475,13 @@ border-bottom:1px solid var(--border)}
 text-transform:uppercase;color:var(--terra)}
 .extra-card{display:block;width:100%;text-align:left;font-family:inherit;color:inherit;
 position:relative;cursor:pointer;border-radius:16px;padding:16px;margin-bottom:9px;
-background:linear-gradient(150deg,#2a1d13 0%,#1c1610 55%,#14201e 100%);
-border:2px solid var(--terra);box-shadow:0 8px 30px rgba(168,91,52,.22);
+background:linear-gradient(150deg,#2e2418 0%,#15292c 55%,#10292e 100%);
+border:2px solid var(--terra);box-shadow:0 8px 30px rgba(186,116,77,.22);
 transition:transform .16s var(--ease),box-shadow .16s var(--ease)}
-.extra-card:active{transform:scale(.982);box-shadow:0 4px 18px rgba(168,91,52,.3)}
-.ex-badge{position:absolute;top:-9px;right:14px;background:var(--terra);color:#fff;
+.extra-card:active{transform:scale(.982);box-shadow:0 4px 18px rgba(186,116,77,.3)}
+.ex-badge{position:absolute;top:-9px;right:14px;background:var(--terra);color:#1a0e06;
 font-size:9.5px;font-weight:900;letter-spacing:1.2px;padding:4px 10px;border-radius:20px;
-box-shadow:0 3px 12px rgba(168,91,52,.55)}
+box-shadow:0 3px 12px rgba(186,116,77,.55)}
 .ex-top{display:flex;align-items:center;gap:11px;margin-bottom:9px}
 .ex-flag{font-size:26px;flex-shrink:0}
 .ex-head{flex:1;min-width:0}
@@ -484,14 +494,14 @@ line-height:1.5;margin-bottom:11px}
 .ex-meta .rc-tag b{color:var(--cream)}
 
 /* variantes de badge e de borda por tipo de extra */
-.ex-badge.badge-classic{background:var(--cream);color:#2a1d13;box-shadow:0 3px 12px rgba(240,220,192,.4)}
-.ex-badge.badge-cold{background:var(--ice);color:#04212c;box-shadow:0 3px 12px rgba(90,169,201,.5)}
+.ex-badge.badge-classic{background:var(--cream);color:#2a1d13;box-shadow:0 3px 12px rgba(250,217,184,.4)}
+.ex-badge.badge-cold{background:var(--ice);color:#04212c;box-shadow:0 3px 12px rgba(142,197,236,.5)}
 .extra-card.kind-classic{border-color:var(--cream);
-background:linear-gradient(150deg,#2b241a 0%,#1c1610 55%,#181d1c 100%);
-box-shadow:0 8px 30px rgba(240,220,192,.14)}
+background:linear-gradient(150deg,#2f2b22 0%,#15292c 55%,#122b30 100%);
+box-shadow:0 8px 30px rgba(250,217,184,.14)}
 .extra-card.kind-cold{border-color:var(--ice);
-background:linear-gradient(150deg,#122a33 0%,#141b1e 55%,#101815 100%);
-box-shadow:0 8px 30px rgba(90,169,201,.2)}
+background:linear-gradient(150deg,#14324c 0%,#112a38 55%,#0e252c 100%);
+box-shadow:0 8px 30px rgba(142,197,236,.2)}
 .extra-card.kind-classic .ex-author{color:var(--cream)}
 .extra-card.kind-cold .ex-author{color:var(--ice)}
 .extra-card.kind-cold .ex-meta .rc-tag b{color:var(--ice)}
@@ -556,10 +566,10 @@ color:var(--text-muted);text-transform:none;letter-spacing:0}
 .timeline{display:flex;gap:2px;height:34px;border-radius:9px;overflow:hidden;
 background:var(--bg);margin-bottom:6px;border:1px solid var(--border)}
 .tl-seg{position:relative;display:flex;align-items:center;justify-content:center;
-font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;color:#04201d;
+font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;color:#04181b;
 background:var(--green);min-width:3px;overflow:hidden;
 transition:opacity .2s var(--ease)}
-.tl-seg:nth-child(even){background:#3fb3a4}
+.tl-seg:nth-child(even){background:#4aa9ae}
 .tl-seg.tl-drain{background:var(--border);color:var(--text-muted)}
 .tl-axis{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
 font-size:9.5px;font-weight:700;color:var(--text-muted);margin-bottom:16px}
@@ -576,7 +586,7 @@ font-weight:600;color:var(--text-muted);margin-top:2px}
 .pdot{flex:1;width:auto;height:5px;min-width:3px;border-radius:3px;
 background:var(--border);transition:background .28s var(--ease),transform .28s var(--ease)}
 .pdot.active{width:auto;height:5px;background:var(--green);transform:scaleY(2.4);
-box-shadow:0 0 10px rgba(42,157,143,.6)}
+box-shadow:0 0 10px rgba(91,184,189,.6)}
 .pdot.done{background:var(--teal-deep)}
 
 
@@ -618,14 +628,13 @@ padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Contraste (WCAG 2.1 AA, 4.5:1 para texto normal) ──
-   --text-muted era #7d7265 = 4,20:1 sobre o fundo do app: reprovava em
-   .s1-sub, .rc-method, .year-header, .head-count e .tl-axis, todos abaixo
-   de 14px. #8a7f70 sobe para 5,03:1 sobre o fundo e 4,59:1 sobre a surface. */
-:root{--text-muted:#8a7f70;
-/* --terra (#a85b34) rende só 3,61:1 sobre a surface: serve para bordas e
-   fundos (componentes de UI pedem 3:1), não para texto. --terra-text é a
-   mesma família a 5,37:1, usada onde o terracota vira palavra. */
---terra-text:#c9784a}
+   --text-muted (.s1-sub, .rc-method, .year-header, .head-count e .tl-axis,
+   todos abaixo de 14px): #97a6a5 dá 6,93:1 sobre o fundo e 6,17:1 sobre a surface. */
+:root{--text-muted:#97a6a5;
+/* --terra (cobre da marca, #ba744d) serve para bordas e fundos (componentes de UI
+   pedem 3:1), não para texto; sobre ele o texto é café escuro #1a0e06 (5,13:1;
+   branco daria 3,69:1). --terra-text é a mesma família a 6,05:1, usada onde o cobre vira palavra. */
+--terra-text:#da9062}
 .chip.chip-new{color:var(--terra-text)}
 .extras-header .eh-t,.rn-label{color:var(--terra-text)}
 /* rótulos pequenos sobre caixas tintadas: o tom muted fica em 4,3:1 */
@@ -644,7 +653,7 @@ padding-left:max(20px,calc(50% - 310px));padding-right:max(20px,calc(50% - 310px
 /* ══ BARRA DE AÇÕES DO PREPARO ══ */
 .brew-actions{display:flex;gap:10px;flex-shrink:0;
 padding:12px 18px calc(14px + env(safe-area-inset-bottom));
-border-top:1px solid var(--border);background:linear-gradient(0deg,rgba(26,22,17,.6),transparent)}
+border-top:1px solid var(--border);background:linear-gradient(0deg,rgba(15,39,44,.6),transparent)}
 .brew-btn{flex:1;min-height:56px;display:flex;align-items:center;justify-content:center;gap:9px;
 border-radius:14px;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:.2px;
 cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--text);
@@ -656,8 +665,8 @@ transition:background .15s var(--ease),border-color .15s var(--ease),transform .
 .bb-reset{flex:0 0 34%;color:var(--text-dim)}
 .bb-reset:active{background:var(--red);border-color:var(--red);color:#fff}
 /* estado pausado: botão vira "Retomar" em verde */
-#s-brew.paused .bb-pause{border-color:var(--green);color:#04201d;background:var(--green);
-box-shadow:0 6px 24px rgba(42,157,143,.35)}
+#s-brew.paused .bb-pause{border-color:var(--green);color:#04181b;background:var(--green);
+box-shadow:0 6px 24px rgba(91,184,189,.35)}
 .brew-btn[disabled]{opacity:.35;pointer-events:none}
 
 /* ══ ESTADO PAUSADO ══ */
@@ -860,12 +869,12 @@ font-size:12px;font-weight:700;color:var(--yellow);line-height:1.4}
 .brew-warn.lv-risk .bw-ic{color:var(--red)}
 .brew-warn.lv-risk .bw-text b{color:var(--red)}
 
-.bb-done{border-color:var(--green)!important;color:#04201d!important;
-background:var(--green)!important;box-shadow:0 6px 24px rgba(42,157,143,.35)}
+.bb-done{border-color:var(--green)!important;color:#04181b!important;
+background:var(--green)!important;box-shadow:0 6px 24px rgba(91,184,189,.35)}
 .fin-cmp{display:inline-block;margin-top:9px;padding:4px 12px;border-radius:14px;
 font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;
 background:rgba(255,255,255,.06);color:var(--text-dim)}
-.fin-cmp[data-tstate="draining"]{background:rgba(240,220,192,.1);color:var(--cream)}
+.fin-cmp[data-tstate="draining"]{background:rgba(250,217,184,.1);color:var(--cream)}
 .fin-cmp[data-tstate="over"]{background:var(--yellow-bg);color:var(--yellow)}
 .fin-cmp[data-tstate="risk"]{background:var(--red-bg);color:var(--red)}
 .fin-auto{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--yellow)}
@@ -964,7 +973,7 @@ line-height:1.35;margin-bottom:3px}
 .recipe-card.mine{border-left:4px solid var(--teal-deep)}
 .create-card{display:flex;align-items:center;gap:13px;width:100%;min-height:64px;text-align:left;
 padding:12px 15px;margin-bottom:9px;border-radius:14px;cursor:pointer;font-family:inherit;color:inherit;
-background:transparent;border:2px dashed rgba(42,157,143,.55);
+background:transparent;border:2px dashed rgba(91,184,189,.55);
 transition:transform .16s var(--ease),background .16s var(--ease),border-color .16s var(--ease)}
 .create-card:active{transform:scale(.982);background:var(--green-bg);border-color:var(--green)}
 .cc-plus{flex-shrink:0;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
@@ -1090,7 +1099,7 @@ display:flex;align-items:center;justify-content:center}
 .bld-serve{display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 0 0;
 border-top:1px solid var(--border)}
 .bld-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;
-margin:4px 0 14px;border-radius:13px;border:2px dashed rgba(42,157,143,.55);background:transparent;
+margin:4px 0 14px;border-radius:13px;border:2px dashed rgba(91,184,189,.55);background:transparent;
 color:var(--green);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;
 transition:background .15s var(--ease)}
 .bld-add:active{background:var(--green-bg)}
@@ -1127,7 +1136,7 @@ border:2px solid var(--border)}
 @media (max-width:340px){.steep-presets{gap:3px;padding:2px 0}}
 /* passos de ação da imersão (agitar, encaixar, pressionar): o verde de ação do
    app, o mesmo do "DESPEJE AGORA"; a instrução sobe para o tom do texto */
-.step-wait.step-act{background:linear-gradient(160deg,#123029 0%,var(--green-bg) 70%);border-color:var(--green)}
+.step-wait.step-act{background:linear-gradient(160deg,#154049 0%,var(--green-bg) 70%);border-color:var(--green)}
 .step-act .step-type{color:var(--green)}
 .step-act .ring-fill,.step-act .ring-bg{stroke:var(--green)}
 .step-act .ring-time{color:var(--green)}
@@ -1146,10 +1155,10 @@ border:2px solid var(--border)}
 .temp-chip{display:flex;align-items:center;gap:.36em;width:-moz-fit-content;width:fit-content;max-width:100%;
 font-size:13.5px;font-weight:700;line-height:1;white-space:nowrap;
 padding:7px 13px;border-radius:999px;color:var(--text-dim);
-background:rgba(0,0,0,.34);border:1px solid rgba(246,241,234,.1)}
+background:rgba(0,0,0,.34);border:1px solid rgba(247,239,230,.1)}
 .tc-val{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .temp-chip.changed{color:#14100c;background:var(--text);border-color:var(--text);
-font-size:14px;font-weight:800;box-shadow:0 4px 16px rgba(246,241,234,.2)}
+font-size:14px;font-weight:800;box-shadow:0 4px 16px rgba(247,239,230,.2)}
 .temp-chip .tc-prev{font-weight:600;opacity:.76}
 .pour-head .temp-chip{margin:8px auto 16px}
 
@@ -1172,6 +1181,9 @@ color:var(--text-dim);font-variant-numeric:tabular-nums}
 .next-action.na-pour{display:flex;align-items:baseline;gap:.32em;min-width:0}
 .na-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .na-amt{flex-shrink:0;white-space:nowrap}
+/* r11: a mensagem final (escoamento final / separe a AeroPress) vem sozinha na barra;
+   em tela estreita ela quebra em 2 linhas em vez de perder o fim para as reticências */
+.next-content>.next-action:only-child{white-space:normal;text-wrap:balance}
 .next-content.has-temp{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
 column-gap:12px;row-gap:7px;align-items:center}
 .next-content.has-temp .next-label{grid-column:1;grid-row:1}
@@ -1310,7 +1322,7 @@ grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);column-gap:16px;align-items:
 <main id="s-select" class="screen active" aria-label="Seleção de receita">
 <header class="s1-top">
 <a href="https://www.instagram.com/original.coffee.roaster/" target="_blank" rel="noopener" class="s1-brand" aria-label="Instagram: @original.coffee.roaster (abre em nova aba)">
-<span class="s1-brand-icon" aria-hidden="true">📷</span>
+<svg class="s1-escudo" viewBox="-75 -109 150 184" aria-hidden="true" focusable="false"><defs><clipPath id="brewEscudoPlaca"><path d="M-39 -73 H39 V0 A39 39 0 0 1 -39 0 Z"/></clipPath></defs><path d="M-74 -108 H74 V0 A74 74 0 0 1 -74 0 Z" fill="#ba744d"/><path d="M-65 -99 H65 V0 A65 65 0 0 1 -65 0 Z" fill="#5d3007"/><path d="M-48 -82 H48 V0 A48 48 0 0 1 -48 0 Z" fill="#ba744d"/><path d="M-39 -73 H39 V0 A39 39 0 0 1 -39 0 Z" fill="#da9c5e"/><g clip-path="url(#brewEscudoPlaca)"><path d="M0 -85.7 L190.56 200 L-190.56 200 Z" fill="#ba744d"/><path d="M0 -70 L180.09 200 L-180.09 200 Z" fill="#fad9b8"/></g><circle r="22" fill="#ba744d"/><circle r="13" fill="#5d3007"/></svg>
 <span class="s1-brand-text">@original.coffee.roaster</span>
 </a>
 <div class="head-row">
@@ -2179,7 +2191,7 @@ el.classList.add('show');
 setTimeout(()=>{el.classList.remove('show');},kind==='risk'?260:100);}
 
 /* ═══ NAVIGATION ═══ */
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='s-setup')revealDose(true);}
 function goBack(){
 const screens=document.querySelectorAll('.screen.active');
 const active=screens[0]?.id;
@@ -2472,6 +2484,19 @@ const t=timelineHTML(R.steps,pourDispAt);
 el.innerHTML=t.bar;ax.innerHTML=t.axis;
 }
 
+/* A dose marcada fica sempre à vista: em telas estreitas a fileira não cabe inteira e a
+   dose da receita podia abrir fora da tela (Ultimate V60: 30 g). Mexe só na posição de
+   rolagem, ao abrir o setup e quando a dose muda; rolar à mão continua valendo. */
+let dosePresetShown=null;
+function revealDose(fromStart){
+const el=document.getElementById('dose-presets'),on=el&&el.querySelector('.dose-preset.on');
+if(!el||!el.clientWidth)return;
+if(fromStart)el.scrollLeft=0;   // a fileira é a mesma para todas as receitas: não herda a rolagem da anterior
+if(!on)return;
+const a=el.getBoundingClientRect(),b=on.getBoundingClientRect();
+if(b.left<a.left)el.scrollLeft-=Math.ceil(a.left-b.left)+2;
+else if(b.right>a.right)el.scrollLeft+=Math.ceil(b.right-a.right)+2;
+}
 function renderDosePresets(){
 const el=document.getElementById('dose-presets');if(!el)return;
 const base=R.designDose||R.defaultDose||18;   // a dose de projeto sempre aparece entre os presets
@@ -2480,6 +2505,7 @@ if(opts.indexOf(base)<0)opts.push(base);
 opts.sort((a,b)=>a-b);
 el.innerHTML=opts.map(g=>`<button type="button" class="dose-preset${g===dose?' on':''}${g===base?' is-design':''}"
 aria-pressed="${g===dose}" aria-label="Usar ${fmtDose(g)}${g===base?', dose de projeto da receita':''}" onclick="setDose(${g})">${String(g).replace('.',',')}g</button>`).join('');
+if(dose!==dosePresetShown){dosePresetShown=dose;revealDose();}
 }
 function setDose(g){
 dose=Math.max(1,Math.min(80,g));lastDose=dose;
