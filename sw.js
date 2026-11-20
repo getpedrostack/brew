@@ -1,5 +1,6 @@
 /* Service worker — app shell offline, amigável a updates. Só ativa em http(s). */
-const CACHE = 'wbrc-shell-v23';
+const PREFIXO = 'wbrc-shell-';
+const CACHE = PREFIXO + 'v24';
 const ASSETS = [
   './brew.html',
   './manifest.webmanifest',
@@ -18,7 +19,8 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      // só os caches do próprio Brew: os outros apps de getpedrostack.github.io dividem o mesmo CacheStorage
+      .then(keys => Promise.all(keys.filter(k => k.startsWith(PREFIXO) && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
